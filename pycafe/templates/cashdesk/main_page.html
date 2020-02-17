@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>PyCafe System Cashdesk</title>
+  <meta charset="UTF-8">
+</head>
+
+<style>
+* {box-sizing: border-box;}
+/* Styling of major grid elements */
+.grid-container {display: grid; grid-gap: 5px; grid-template-columns: 33% auto 33%; grid-template-rows: auto auto auto 45px 75px;}
+.grid-item {padding: 10px;}
+/* Top-most stripe, PyCafe logo and Version number*/
+.pycafe-logo {grid-column: 1 / span 2; grid-row: 1; text-align: left; font-family: sans-serif; font-size: 24px; padding: 20px; background-color: DarkGreen; color: white;}
+.pycafe-logout {grid-column: 3; grid-row: 1; text-align: left; font-family: sans-serif; font-size: 24px; padding: 20px; background-color: DarkGreen; color: white;}
+.logout-button {font-size: 16px; font-weight: bold; color: white; display:inline-block; background-color: GoldenRod; padding: 10px 10px; border: none; cursor: pointer; opacity: 0.9;}
+.logout-button:hover {opacity:1;}
+.admin-button {font-size: 16px; font-weight: bold; color: black; float:right; background-color: GoldenRod; padding: 10px 10px; border: none; cursor: pointer; opacity: 0.9;}
+.admin-button:hover {opacity:1; background-color: red;}
+.label-operator {font-size: 16px; font-weight: bold; padding: 10px 10px 10px 0; display: inline-block; font-family: sans-serif;}
+/* Left PyCafe Menu Pane Title*/
+.menu-title {grid-column: 1; grid-row: 2; text-align: center; font-size: 24px; font-family: sans-serif; padding: 10px; background-color: blue; color: white;}
+/* Right Order Pane Title*/
+.order-title {grid-column: 2 / span 2; grid-row: 2; text-align: center; font-size: 24px; font-family: sans-serif; padding: 10px; background-color: green; color: white;}
+/* PyCafe Menu Pane */
+.menu-pane {grid-column: 1; grid-row: 3; padding: 0px; overflow-y: scroll; max-height: 60vh;}
+/* Order Menu Pane */
+.order-pane {grid-column: 2 / span 2; grid-row: 3; padding: 0px; overflow-y: scroll; max-height: 60vh;}
+/* Star Points Total Field */
+.starpoints-total {grid-column: 2; grid-row: 4; text-align: right; font-size: 24px; font-family: sans-serif; padding: 10px; background-color: PaleGreen;}
+/* Order Total Field */
+.order-total {grid-column: 3; grid-row: 4; text-align: right; font-size: 24px; font-family: sans-serif; padding: 10px; background-color: yellow;}
+/* Star Points Program Pane */
+.starpoints-program {grid-column: 1; grid-row: 4 / span 2; background-color: #eee;}
+/* Star Points Order button */
+.starpoints-order {grid-column: 2; grid-row: 5; background-color: #eee; display: flex; justify-content: center;}
+/* Order Buttons Field */
+.order-buttons {grid-column: 3; grid-row: 5; background-color: #eee;}
+/* End of major grid elements */
+/* Styling of table in 'menu-pane' Grid Area */
+#menu {font-family: Arial, Helvetica, sans-serif; border-collapse: collapse; width: 100%; overflow-y: auto;}
+#menu th, #menu tr {border-bottom: 1px solid #ddd; padding: 12px;}
+#menu tr:nth-child(even){background-color: #f2f2f2;}
+#menu tr:hover {background-color: #ddd;}
+#menu td {padding: 8px;}
+#menu th {padding-top: 12px; padding-bottom: 12px; background-color: DodgerBlue; color: white;}
+/* Styling of elements in 'menu-pane' Grid Area */
+.menu-price {width: 80px; text-align: right; padding: 12px 16px 12px 16px; color: white; background-color: RoyalBlue;}
+.menu-price:hover {background-color: SkyBlue; color: white;}
+.menu-points {width: 20px; font-weight: bold; text-align: center; background-color: Aqua;}
+/* Styling of table in 'order-pane' Grid Area */
+#order {font-family: Arial, Helvetica, sans-serif; border-collapse: collapse; width: 100%; overflow-y: auto;}
+#order th, #order tr {border-bottom: 1px solid #ddd; padding: 12px;}
+#order tr:nth-child(even){background-color: #f2f2f2;}
+#order td {padding: 8px;}
+#order tr:hover {background-color: #ddd;}
+#order th {padding-top: 12px; padding-bottom: 12px; background-color: #4CAF50; color: white;}
+/* Styling of elements in 'order-pane' Grid Area */
+.order-close {width: 30px; padding: 12px 16px 12px 16px; color: white; background-color: #660000;}
+.order-close:hover {background-color: #f44336; color: white;}
+.order-alignright {text-align: right;}
+.order-points {width: 20px; font-weight: bold; text-align: center; background-color: PaleGreen;}
+.order-minus {padding: 12px 16px 12px 16px; color: white; background-color: GoldenRod; width: 30px; overflow: hidden; text-align: center;}
+.order-minus:hover {background-color: Gold; color: white;}
+.order-plus {padding: 12px 16px 12px 16px; color: white; background-color: Olive; width: 30px; overflow: hidden; text-align: center;}
+.order-plus:hover {background-color: OliveDrab; color: white;}
+.order-quantity {text-align: right; width: 80px;}
+/* Styling of elements in 'order-buttons' Grid Area */
+.cancel-button {border: none; color: white; padding: 15px 32px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; background-color: DarkRed;}
+.cancel-button:hover {background-color: red;}
+.order-button {border: none; color: white; padding: 10px 32px; text-align: center; text-decoration: none; font-size: 26px; margin: 4px 2px; cursor: pointer; background-color: DarkGreen; float: right;}
+.order-button:hover {background-color: LightGreen; color: black;}
+/* Styling of elements in 'starpoints-program' Grid Area */
+.register-button {border: none; color: white; padding: 15px 32px; text-align: center; text-decoration: none; font-size: 16px; margin: 4px 2px; cursor: pointer; background-color: DarkBlue; float: right;}
+.register-button:hover {background-color: blue;}
+.validate-button {border: none; color: white; padding: 15px 32px; text-align: center; text-decoration: none; font-size: 16px; margin: 4px 2px; cursor: pointer; background-color: DarkGreen; float: left;}
+.validate-button:hover {background-color: green;}
+.label-nickname {padding: 12px 12px 12px 0; display: inline-block; font-family: sans-serif;}
+.starpoints-container {padding: 5px;}
+.starpoints-col-33 {float: left; width: 33%; margin-top: 6px;}
+.starpoints-col-66 {float: left; width: 66%; margin-top: 6px;}
+/* Clear floats after the columns */
+.starpoints-row:after {content: ""; display: table; clear: both;}
+/* Style the input in 'starpoints-program' Grid Area */
+input[name=checknick] {margin: 0; border: none; border-radius: 0; width: 95%; padding: 10px; float: left; color: red; font-size: 16px; font-weight: bold;}
+input[name=checknick]:focus {background-color: #ddd; color:red;}
+/* Styling of elements in 'starpoints-order' Grid Area */
+.starpoints-order-button {border: none; color: black; padding: 13px 32px; text-align: center; text-decoration: none; display: inline-block; font-size: 20px; margin: 4px 2px; cursor: pointer; background-color: GoldenRod;}
+.starpoints-order-button:hover {background-color: gold;}
+/* Styling in 'starpoints-register' pop-up pane */
+.register-close {text-align: center; width: 30px; padding: 12px 12px 12px 12px; color: white; background-color: #660000; float: right;}
+.register-close:hover {background-color: #f44336; color: white;}
+/* Style declarations for Register User to Star Points Program */
+.register-container {padding: 16px;}
+/* Full-width input fields */
+input[name=email], input[name=custname], input[name=nickname] {font-size: 16px; width: 100%; padding: 15px; margin: 5px 0 22px 0; display: inline-block; border: none; background: #f1f1f1;}
+/* Add a background color when the inputs get focus */
+input[name=email]:focus, input[name=custname]:focus, input[name=nickname]:focus {background-color: #ddd; outline: none;}
+/* Add visual clue for invalid 'email' Input content */
+input[name=email]:invalid {background-color: rgba(255,0,0,0.1);}
+/* Float for cancel and signup buttons and add an equal width */
+.register-cancel, .register-signup {font-size: 16px; float: left; width: 50%; background-color: #4CAF50; color: white; padding: 14px 20px; margin: 8px 0; border: none; cursor: pointer; opacity: 0.9;}
+/* Extra styles for the cancel button */
+.register-cancel {background-color: #f44336;}
+.register-cancel:hover, .register-signup:hover {opacity:1;}
+/* The Modal (background) */
+.register-modal {display: none; position: fixed; z-index: 1; left: 30vw; top: 10vh; width: 40vw; height: 80vh; overflow: auto; background-color: white; border-width: 3px; border-color: black; border-style: solid; padding: 5px; box-shadow: 0 5px 10px 0 rgba(0,0,0,0.4),0 20px 40px 0 rgba(0,0,0,0.2);}
+/* Modal Content/Box */
+.register-modal-content {width: 100%; font-family: sans-serif; background-color: #fefefe;}
+/* Style the horizontal ruler */
+hr {border: 1px solid #f1f1f1; margin-bottom: 25px;}
+/* Clear floats */
+.register-clearfix::after {content: ""; clear: both; display: table;}
+/* Styling in 'sporderform' pop-up pane */
+.sporder-close {text-align: center; width: 30px; padding: 12px 12px 12px 12px; color: white; background-color: #660000; float: right;}
+.sporder-close:hover {background-color: #f44336; color: white;}
+.sporder-container {padding: 16px;}
+.sporder-cancel, .sporder-makeorder {font-size: 16px; float: left; width: 50%; background-color: #4CAF50; color: white; padding: 14px 20px; margin: 8px 0; border: none; cursor: pointer; opacity: 0.9;}
+.sporder-cancel {padding: 14px 20px; background-color: #f44336;}
+.sporder-cancel:hover, .sporder-makeorder:hover {opacity:1;}
+.sporder-modal {display: none; position: fixed; z-index: 1; left: 20vw; top: 10vh; width: 60vw; height: 80vh; overflow: auto; background-color: white; border-width: 3px; border-color: black; border-style: solid; padding: 5px; box-shadow: 0 5px 10px 0 rgba(0,0,0,0.4),0 20px 40px 0 rgba(0,0,0,0.2);}
+.sporder-modal-content {font-family: sans-serif; background-color: #fefefe; width: 100%;}
+.sporder-clearfix::after {content: ""; clear: both; display: table;}
+/* Styling of table in 'sporderform' pop-up */
+#sporder {font-family: Arial, Helvetica, sans-serif; border-collapse: collapse; width: 100%; overflow-y: auto;}
+#sporder th, #sporder td {border-bottom: 1px solid #ddd; padding: 12px;}
+#sporder tr:nth-child(even) {background-color: #f2f2f2;}
+#sporder tr:hover {background-color: #ddd;}
+#sporder td {padding: 8px;}
+#sporder th {padding-top: 12px; padding-bottom: 12px; background-color: #4CAF50; color: white;}
+.sporder-close {width: 30px; padding: 12px 16px 12px 16px; color: white; background-color: #660000;}
+.sporder-close:hover {background-color: #f44336; color: white;}
+.sporder-minus {padding: 12px 16px 12px 16px; color: white; background-color: GoldenRod; width: 30px; overflow: hidden; text-align: center;}
+.sporder-minus:hover {background-color: Gold; color: white;}
+.sporder-plus {padding: 12px 16px 12px 16px; color: white; background-color: Olive; width: 30px; overflow: hidden; text-align: center;}
+.sporder-plus:hover {background-color: OliveDrab; color: white;}
+.sporder-quantity {text-align: right; width: 80px;}
+</style>
+
+<body>
+  <div id="registerform" class="register-modal">
+  <form class="register-modal-content" action="/register_user">
+    <span onclick="document.getElementById('registerform').style.display='none'" class="register-close" title="Close Register Form">&times;</span>
+    <div class="register-container">
+      <h1>Star Points Program Sign Up</h1>
+      <p>Please fill in this form to create Star Points Customer.</p>
+      <hr>
+      <label for="custname"><b>Name</b></label>
+      <input type="text" placeholder="Enter Name..." id="custname" name="custname" required>
+      <label for="nickname"><b>Nickname</b></label>
+      <input type="text" placeholder="Enter nickname..." id="nickname" name="nickname" required>
+      <label for="email"><b>Email</b></label>
+      <input type="email" placeholder="Enter Email..." id="email" name="email" required>
+      <hr>
+      <div class="register-clearfix">
+        <button type="button" onclick="document.getElementById('registerform').style.display='none'" class="register-cancel">Cancel</button>
+        <button type="button" onclick="starPointsSignup();" class="register-signup">Sign Up</button>
+      </div>
+    </div>
+  </form>
+  </div>
+
+  <div id="sporderform" class="sporder-modal">
+  <form class="sporder-modal-content">
+    <span onclick="document.getElementById('sporderform').style.display='none'" class="sporder-close" title="Close Modal">&times;</span>
+    <div class="sporder-container">
+      <h1>Star Points Program Order</h1>
+      <hr>
+      <p>'<span id="sporder-nickname">Nick</span>' has <span id="sporder-haspoints">0</span> points available.</p>
+      <table id="sporder">
+        <tr>
+          <th>Item</th>
+          <th style="width: 30px">-</th>
+          <th style="width: 80px">Qty</th>
+          <th style="width: 30px">+</th>
+        </tr>
+      </table>
+      <p>Star Points taken for this order: <span id="pointstaken">0</span></p>
+      <hr>
+      <div class="sporder-clearfix">
+        <button type="button" onclick="document.getElementById('sporderform').style.display='none'" class="sporder-cancel">Cancel</button>
+        <button type="button" onclick="starpointsMakeOrder();" class="sporder-makeorder">Confirm Order</button>
+      </div>
+    </div>
+  </form>
+  </div>
+
+  <div class="grid-container">
+    <div class="grid-item pycafe-logo">PyCafe Version {{ config.PYCAFE_VERSION }}</div>
+    <div class="grid-item pycafe-logout">
+      <table style="float: right;">
+        <tr>
+          <td><div class="label-operator">{{ g.user['username'] }} </div></td>
+          <td><button class="logout-button" type="button" onclick="location.href='/staff/logout';">Logout</button></td>
+          {% if g.user.is_admin %}
+          <td><button class="admin-button" type="button" onclick="location.href='/admin';">Admin Page</button></td>
+          {% endif %}
+        </tr>
+      </table>
+    </div>
+    <div class="grid-item menu-title">MENU</div>
+    <div class="grid-item order-title">ORDER</div>
+    <div class="grid-item menu-pane">
+      <table id="menu">
+        <tr>
+          <th>Item</th>
+          <th class="menupointsheader">*</th>
+          <th class="alignright" width="80px">Price</th>
+        </tr>
+      </table>
+    </div>
+    <div class="grid-item order-pane">
+      <table id="order">
+        <tr>
+          <th>Item</th>
+          <th style="width: 20px">*</th>
+          <th style="width: 80px">Price</th>
+          <th style="width: 30px">-</th>
+          <th style="width: 80px">Qty</th>
+          <th style="width: 30px">+</th>
+          <th style="width: 100px">Sub</th>
+          <th style="width: 30px">x</th>
+        </tr>
+      </table>
+    </div>
+    <div class="grid-item starpoints-total">Star Points: <span id="points">0</span></div>
+    <div class="grid-item order-total">Total: <span id="total">0.00</span></div>
+    <div class="grid-item starpoints-program">
+      <div class="starpoints-container">
+        <div class="starpoints-row">
+          <div class="starpoints-col-66" >
+            <input type="text" id="checknick" name="checknick" placeholder="Star Points nickname..">
+          </div>
+          <div class="starpoints-col-33">
+            <label class="label-nickname">has <span id="haspoints">0</span> points</label>
+          </div>
+        </div>
+        <div class="starpoints-row">
+          <button class="validate-button" onclick="validateNickname()">Validate</button>
+          <button class="register-button" onclick="registerNickname()">Register</button>
+        </div>
+      </div>
+    </div>
+    <div class="grid-item starpoints-order">
+      <button class="starpoints-order-button" onclick="starpointsOrder()">Star Points Order</button>
+    </div>
+    <div class="grid-item order-buttons">
+      <button class="cancel-button" onclick="cancelOrder()">Cancel</button>
+      <button class="order-button" onclick="confirmOrder()">Order</button>
+    </div>
+  </div>
+
+<script>
+"use strict";
+
+function httpQuery(url, method, cFunction, body='') {
+  // Create new XMLHttpRequest with 'url', 'method', optional 'body' and callback 'cFunction'
+  // 'url' must be a string, 'method' can be 'GET', 'POST', 'PUT', etc.
+  let xhttp;
+  xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4) {
+      cFunction(this);
+    }
+  };
+  xhttp.open(method, url, true);
+
+  if (body=='') {
+    xhttp.send();
+  } else {
+    xhttp.setRequestHeader('Content-type', 'application/json');
+    xhttp.send(body);
+  }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        let cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            let cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function clearAllForms() {
+  // Remove all Order items from 'order' Table and zero or clear all items in: 'sporderform', 'registerform', 'order-total', 'sporder-total' and 'starpoints-program'
+  document.getElementById("total").innerHTML = "0.00";
+  document.getElementById("points").innerHTML = "0.00";
+  document.getElementById("checknick").value = "";
+  document.getElementById("checknick").onfocus = function () {
+    document.getElementById("checknick").style.color = "red";
+  }
+  document.getElementById("haspoints").innerHTML = "0";
+  document.getElementById("custname").value = "";
+  document.getElementById("nickname").value = "";
+  document.getElementById("email").value = "";
+  document.getElementById("sporder-nickname").value = "";
+  document.getElementById("sporder-haspoints").value = "0";
+  document.getElementById("pointstaken").value = "0";
+  let table = document.getElementById("sporder");
+  // Star Points Order Menu Table Columns: Item [0], - [1], Qty [2], + [3]
+  let i;
+  for (i=table.rows.length-1; i>0; i--) {
+    table.rows[i].children[2].innerHTML = "0";
+  };
+  table = document.getElementById("order");
+  for (i=table.rows.length-1; i>0; i--) {
+    table.deleteRow(i);
+  };
+}
+
+// Get Menu Items list from backend
+httpQuery("{{ url_for('cashdesk.menu_list')}}", 'GET', readMenuParseResponse);
+
+function readMenuParseResponse(xhttp) {
+  // Initialize Menu Pane and Star Points Order Tables with Menu Items List
+  if (xhttp.status != 200) {
+    window.alert("Cannot read menu from Server!\nServer responded: "+xhttp.responseText);
+    return
+  }
+  let menuJSON = xhttp.responseText;
+  let menu = JSON.parse(menuJSON); // All Menu Item fields are strings!
+
+  // Initialize Menu Table in 'menu-pane' Grid Area
+  let i;
+  for (i=0; i<menu.length; i++) {
+  // Add Menu Item to Menu Pane
+  // Menu Table Columns: Item [0], Star Points [1], Price [2]
+    let row = document.createElement("tr");
+  // Create "td" for Item
+    let td = document.createElement("td");
+    let txt = document.createTextNode(menu[i].item);
+    td.appendChild(txt);
+    row.appendChild(td);
+    td = document.createElement("td");
+    if (menu[i].category == 'Coffee') {
+      txt = document.createTextNode('*');
+    } else {
+      txt = document.createTextNode(' ');
+    };
+    td.appendChild(txt);
+    td.className = "menu-points"
+    row.appendChild(td);
+  // Create "td" for Price
+    let price = parseFloat(menu[i].price);
+    txt = document.createTextNode(price.toFixed(2));
+    td = document.createElement("td");
+    td.className = "menu-price";
+    td.appendChild(txt);
+    row.appendChild(td);
+    row.addEventListener('click', function(ev) {
+      menuClick(ev.target);
+    }, false);
+    document.getElementById("menu").appendChild(row);
+  }
+
+  // Initialize Menu Table in 'sporderform' pop-up pane
+  for (i=0; i<menu.length; i++) {
+  // Add Menu Item to Menu Pane
+  // Star Points Order Menu Table Columns: Item [0], - [1], Qty [2], + [3]
+    if (menu[i].category == 'Coffee') {
+      let row = document.createElement("tr");
+    // Create "td" for Item
+      let td = document.createElement("td");
+      let txt = document.createTextNode(menu[i].item);
+      td.appendChild(txt);
+      row.appendChild(td);
+    // Create "td" for -
+      txt = document.createTextNode("-");
+      td = document.createElement("td");
+      td.className = "sporder-minus";
+      td.appendChild(txt);
+      td.addEventListener('click', function(ev) {
+        sporderMinus(ev.target);
+      }, false);
+      row.appendChild(td);
+    // Create "td" for Qty
+      txt = document.createTextNode("0");
+      td = document.createElement("td");
+      td.className = "sporder-quantity";
+      td.appendChild(txt);
+      row.appendChild(td);
+    // Create "td" for +
+      txt = document.createTextNode("+");
+      td = document.createElement("td");
+      td.className = "sporder-plus";
+      td.appendChild(txt);
+      td.addEventListener('click', function(ev) {
+        sporderPlus(ev.target);
+      }, false);
+      row.appendChild(td);
+      document.getElementById("sporder").appendChild(row);
+    }
+  }
+}
+
+function addToOrder(item, points, price) {
+  // Add Menu Item to Order Table
+  let order = document.getElementById("order");
+// Order Table Columns: Item [0], Star Points [1], Price [2], - [3], Qty [4], + [5], Sub [6], x [7]
+// If 'item' is in Order already, then add +1 to Qty and return
+  for (let i=1; i<order.children.length; i++) {
+    let orderRow = order.children[i];
+    if (item == orderRow.children[0].innerHTML) {
+      orderPlus(orderRow.children[0]);
+      return;
+    }
+  }
+// if 'item' is not in Order, add a new row with it
+// Order Table Columns: Item [0], Star Points [1], Price [2], - [3], Qty [4], + [5], Sub [6], x [7]
+  let row = document.createElement("tr");
+// Create "td" for Item
+  let td = document.createElement("td");
+  let txt = document.createTextNode(item);
+  td.appendChild(txt);
+  row.appendChild(td);
+// Create "td" for Star Points
+  txt = document.createTextNode(points);
+  td = document.createElement("td");
+  td.className = "order-points";
+  td.appendChild(txt);
+  row.appendChild(td);
+  if (points == '*') {
+    adjustPoints(1);
+  };
+// Create "td" for Price
+  txt = document.createTextNode(price.toFixed(2));
+  td = document.createElement("td");
+  td.className = "order-alignright";
+  td.appendChild(txt);
+  row.appendChild(td);
+  adjustTotal(price);
+// Create "td" for -
+  txt = document.createTextNode("-");
+  td = document.createElement("td");
+  td.className = "order-minus";
+  td.appendChild(txt);
+  td.addEventListener('click', function(ev) {
+    orderMinus(ev.target);
+  }, false);
+  row.appendChild(td);
+// Create "td" for Qty
+  let x = 1;
+  txt = document.createTextNode(x.toFixed(0));
+  td = document.createElement("td");
+  td.className = "order-quantity";
+  td.appendChild(txt);
+  row.appendChild(td);
+// Create "td" for +
+  txt = document.createTextNode("+");
+  td = document.createElement("td");
+  td.className = "order-plus";
+  td.appendChild(txt);
+  td.addEventListener('click', function(ev) {
+    orderPlus(ev.target);
+  }, false);
+  row.appendChild(td);
+// Create "td" for Sub
+  txt = document.createTextNode(price.toFixed(2));
+  td = document.createElement("td");
+  td.className = "order-alignright";
+  td.appendChild(txt);
+  row.appendChild(td);
+// Create "td" for x
+  td = document.createElement("td");
+  td.className = "order-alignright";
+  txt = document.createTextNode("\u00D7");
+  td.className = "order-close";
+  td.appendChild(txt);
+  td.addEventListener('click', function(ev) {
+    let itemSub = parseFloat(this.parentElement.children[6].innerHTML);
+    this.parentElement.remove();
+    adjustTotal(0.0-itemSub);
+    if (row.children[1].innerHTML == '*') {
+      // Subtract Qty from Star Points counter for the Order
+      adjustPoints(0-row.children[4].innerHTML);
+    };
+  }, false);
+  row.appendChild(td);
+  order.appendChild(row);
+}
+
+function adjustTotal(adjustment) {
+  let totalElement = document.getElementById("total");
+  let newTotal = parseFloat(totalElement.innerHTML)+adjustment;
+  totalElement.innerHTML = newTotal.toFixed(2);
+}
+
+function adjustPoints(adjustment) {
+  let pointsElement = document.getElementById("points");
+  let newTotal = parseInt(pointsElement.innerHTML)+adjustment;
+  pointsElement.innerHTML = newTotal.toFixed(0);
+}
+
+function orderPlus(elmnt) {
+  // Order Table Columns: Item [0], Star Points [1], Price [2], - [3], Qty [4], + [5], Sub [6], x [7]
+  let row = elmnt.parentElement;
+  let newQty = parseInt(row.children[4].innerHTML)+1;
+  row.children[4].innerHTML = newQty.toFixed(0);
+  let price = parseFloat(row.children[2].innerHTML);
+  let newSub = price * newQty;
+  row.children[6].innerHTML = newSub.toFixed(2);
+  adjustTotal(price);
+  if (row.children[1].innerHTML == '*') {
+    adjustPoints(1);
+  };
+}
+
+function orderMinus(elmnt) {
+  // Order Table Columns: Item [0], Star Points [1], Price [2], - [3], Qty [4], + [5], Sub [6], x [7]
+  let row = elmnt.parentElement;
+  let newQty = parseInt(row.children[4].innerHTML)-1;
+  let price = parseFloat(row.children[2].innerHTML);
+  if (newQty > 0) {
+    row.children[4].innerHTML = newQty.toFixed(0);
+    let newSub = parseFloat(row.children[2].innerHTML) * newQty;
+    row.children[6].innerHTML = newSub.toFixed(2);
+  } else {
+    row.remove();
+  };
+  adjustTotal(0.0-price);
+  if (row.children[1].innerHTML == '*') {
+    adjustPoints(-1);
+  };
+}
+
+function menuClick(elmnt) {
+// Menu Table Columns: Item [0], Star Points [1], Price [2]
+  let row = elmnt.parentElement;
+  let item = row.children[0].innerHTML;
+  let points = row.children[1].innerHTML;
+  let price = parseFloat(row.children[2].innerHTML);
+  addToOrder(item, points, price);
+}
+
+function validateNickname() {
+  let nickname = document.getElementById("checknick").value;
+  httpQuery("{{ url_for('cashdesk.spcustomer') }}"+"?nick="+nickname, 'GET', validateNicknameParseResponse);
+}
+
+function validateNicknameParseResponse(xhttp) {
+  let nicknameElement = document.getElementById("checknick");
+  if (xhttp.status != 200) {
+    nicknameElement.style.color = 'red';
+    let haspointsElement = document.getElementById("haspoints");
+    haspointsElement.innerHTML = "0";
+    window.alert("No such Star Points Customer");
+  } else {
+    nicknameElement.style.color = 'green';
+    nicknameElement.onfocus = function () {
+      document.getElementById("checknick").style.color = "red";
+    }
+    let haspointsElement = document.getElementById("haspoints");
+    let responseText = xhttp.responseText;
+    haspointsElement.innerHTML = JSON.parse(responseText)['points'];
+  }
+}
+
+function registerNickname() {
+  let checknick = document.getElementById("checknick").value;
+  let registernick = document.getElementById("nickname");
+  registernick.value = checknick;
+  document.getElementById("registerform").style.display='block';
+}
+
+function starPointsSignup() {
+  let email = document.getElementById("email").value;
+  let custname = document.getElementById("custname").value;
+  let nickname = document.getElementById("nickname").value;
+  if (document.getElementById("email").checkValidity()) {
+    let query = "?nick="+nickname+"&name="+custname+"&email="+email;
+    httpQuery("{{ url_for('cashdesk.spcustomer') }}"+query, 'POST', starPointsSignupParseResponse);
+  };
+}
+
+function starPointsSignupParseResponse(xhttp) {
+  if (xhttp.status == 200) {
+    let checknickElement = document.getElementById("checknick");
+    let nicknameElement = document.getElementById("nickname");
+    let haspointsElement = document.getElementById("haspoints");
+    checknickElement.value = nicknameElement.value;
+    checknickElement.style.color = 'green';
+    haspointsElement.innerHTML = "0";
+    document.getElementById("registerform").style.display='none';
+  } else {
+    window.alert("Failed to register Start Point Customer\n"+xhttp.responseText);
+  };
+}
+
+function processPayment(totalValue, order) {
+  // process payment for order
+}
+
+function printReceipt(order) {
+  // print receipt for order
+}
+
+function confirmOrder() {
+  let totalValue = document.getElementById("total").innerHTML;
+  if (parseFloat(totalValue) == 0.0) {
+    window.alert("Empty order!!!");
+  } else {
+    if (window.confirm("Please confirm the order\nTotal: "+totalValue)) {
+      let order = [];
+      let orderTable = document.getElementById("order");
+      for (let i=1; i<orderTable.children.length; i++) {
+        let orderRow = orderTable.children[i];
+        order.push({ 'item':orderRow.children[0].innerHTML, 'price':orderRow.children[2].innerHTML,'qty':orderRow.children[4].innerHTML});
+      };
+      processPayment(totalValue, order);
+      printReceipt(order);
+      let orderJSON = JSON.stringify(order);
+      let checknick = document.getElementById("checknick").value;
+      let starpoints = document.getElementById("points").innerHTML;
+      let url = "{{ url_for('cashdesk.order') }}?total="+totalValue+"&nick="+checknick+"&points="+starpoints;
+      httpQuery(url, 'POST', confirmOrderParseResponse, orderJSON);
+    };
+  }
+}
+
+function confirmOrderParseResponse(xhttp) {
+  if (xhttp.status == 200) {
+    clearAllForms();
+  } else {
+    window.alert("Failed to register the Order!\n"+xhttp.responseText);
+  }
+}
+
+function cancelOrder() {
+  if (window.confirm("Cancel order?")) {
+    clearAllForms();
+  };
+}
+
+function starpointsOrder() {
+  let nickname = document.getElementById("checknick").value;
+  let haspoints = document.getElementById("haspoints").innerHTML;
+  let sporderNicknameElement = document.getElementById("sporder-nickname");
+  let sporderHaspointsElement = document.getElementById("sporder-haspoints");
+  sporderNicknameElement.innerHTML = nickname;
+  sporderHaspointsElement.innerHTML = haspoints;
+  document.getElementById("sporderform").style.display='block';
+}
+
+function starpointsMakeOrder() {
+  let totalValue = document.getElementById("pointstaken").innerHTML;
+  if (parseFloat(totalValue) == 0.0) {
+    window.alert("Empty order!!!");
+  } else {
+    if (window.confirm("Please confirm the order\nTotal: "+totalValue)) {
+      let order = [];
+      let orderTable = document.getElementById("sporder");
+      for (let i=1; i<orderTable.children.length; i++) {
+        let orderRow = orderTable.children[i];
+        if (orderRow.children[2].innerHTML > 0) {
+          order.push({ 'item':orderRow.children[0].innerHTML, 'qty':orderRow.children[2].innerHTML});
+        }
+      }
+      let orderJSON = JSON.stringify(order);
+      let nick = document.getElementById("sporder-nickname").innerHTML;
+      let queryString = "?pointstaken="+totalValue+"&nick="+nick;
+      httpQuery("{{ url_for('cashdesk.sporder') }}"+queryString, 'POST', starpointsMakeOrderParseResponse, orderJSON);
+    };
+  }
+}
+
+function starpointsMakeOrderParseResponse(xhttp) {
+  if (xhttp.status == 200) {
+    // if Star Points Order is processed correctly, then undisplay 'sporderform'...
+    document.getElementById("sporderform").style.display='none';
+    // ... and refresh Star Points info for current nickname
+    validateNickname();
+    // Ask cashier if they want to take items of Star Points Order off main Order
+    if (window.confirm("Adjust main order?")) {
+      let sporderTable = document.getElementById("sporder");
+      let order = document.getElementById("order");
+      for (let i=1; i<sporderTable.children.length; i++) {
+        let sporderRow = sporderTable.children[i];
+        let sporderItem = sporderRow.children[0].innerHTML;
+        let sporderQty = parseInt(sporderRow.children[2].innerHTML);
+        if (sporderQty > 0) {
+          for (let j=1; j<order.children.length; j++) {
+            let orderRow = order.children[j];
+            if (sporderItem == orderRow.children[0].innerHTML) {
+              for (let k=0; k<sporderQty; k++) {
+                orderMinus(orderRow.children[0]);
+              }
+            }
+          }
+        }
+      }
+    }
+    // Zero values in 'sporderform'
+    let pointstakenElement = document.getElementById("pointstaken");
+    pointstakenElement.innerHTML = "0";
+    let sporderTable = document.getElementById("sporder");
+    for (let i=1; i<sporderTable.children.length; i++) {
+      let sporderRow = sporderTable.children[i];
+      sporderRow.children[2].innerHTML = "0";
+    }
+  } else {
+    window.alert("Failed to register the Order!\n"+xhttp.responseText);
+  }
+}
+
+function sporderMinus(elmnt) {
+  // Star Points Order Table Columns: Item [0], - [1], Qty [2], + [3]
+  let row = elmnt.parentElement;
+  let qty = parseInt(row.children[2].innerHTML);
+  if (qty > 0) {
+    let newQty = qty - 1;
+    row.children[2].innerHTML = newQty.toFixed(0);
+    let pointstakenElement = document.getElementById("pointstaken");
+    let pointstaken = parseInt(pointstakenElement.innerHTML) - 10;
+    pointstakenElement.innerHTML = pointstaken.toFixed(0);
+  }
+}
+
+function sporderPlus(elmnt) {
+  // Star Points Order Table Columns: Item [0], - [1], Qty [2], + [3]
+  let row = elmnt.parentElement;
+  let qty = parseInt(row.children[2].innerHTML);
+  let pointstakenElement = document.getElementById("pointstaken");
+  let pointstaken = parseInt(pointstakenElement.innerHTML);
+  let haspoints = parseInt(document.getElementById("haspoints").innerHTML);
+  if (haspoints >= pointstaken+10) {
+    let newQty = qty + 1;
+    row.children[2].innerHTML = newQty.toFixed(0);
+    let newPointstaken = pointstaken + 10;
+    pointstakenElement.innerHTML = newPointstaken.toFixed(0);
+  }
+}
+</script>
+</body>
+</html>

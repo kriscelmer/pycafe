@@ -1,0 +1,1759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>PyCafe System Admin Page</title>
+  <meta charset="UTF-8">
+</head>
+
+<style>
+* {box-sizing: border-box;}
+/* Set height of body and the document to 100% */
+body, html {height: 100%; margin: 0; font-family: Arial, Helvetica, sans-serif;}
+/* Style the tab */
+.topmenu {overflow: hidden; border: 1px solid #ccc; background-color: DarkGreen;}
+/* Style the buttons that are used to open the tab content */
+.topmenuitem {font-family: sans-serif; font-size: 20px; background-color: inherit; color: white; float: left; border: none; outline: none; cursor: pointer; padding: 14px 16px; transition: 0.3s;}
+/* Change background color of buttons on hover */
+.topmenuitem:hover {background-color: #66ff33; color: black;}
+/* Create an active/current tablink class */
+.topmenuitem.active {background-color: green;}
+.topmenuitem.logout {float: right;}
+/* Style the tab content */
+.pane {display: none; padding: 6px 12px;}
+.grid-item {padding: 10px;}
+.menus-pane-grid-container {display: grid; grid-gap: 5px; grid-template-columns: 60% 40%; grid-template-rows: auto;}
+.menus-pane-list {grid-column: 1; grid-row: 1; overflow-y: scroll;}
+.menus-pane-edit {grid-column: 2; grid-row: 1; overflow-y: scroll; background-color: #eee; display: flex; justify-content: center;}
+.menus-pane-edit-heading {text-align: center; font-family: sans-serif; font-size: 20px;}
+/* Full-width inputs */
+input[type=text], input[type=email], input[type=number], input[type=password] {width: 100%; padding: 12px 12px; margin: 8px 0; font-size: 16px; font-style: sans-serif; display: inline-block; border: 1px solid #ccc; box-sizing: border-box;}
+input[type=number] {text-align: right; padding: 12px 0px 12px 12px;}
+input[name=email]:invalid {background-color: rgba(255,0,0,0.1);}
+label {font-size: 16px; font-family: sans-serif; display: block; width: 100px; float: left;}
+#menu-table {font-family: Arial, Helvetica, sans-serif; border-collapse: collapse; width: 100%; overflow-y: auto;}
+#menu-table th, #menu-table td {border-bottom: 1px solid #ddd; padding: 5px;}
+#menu-table tr:nth-child(even){background-color: #f2f2f2;}
+#menu-table tr:hover {background-color: #ddd; cursor: pointer;}
+#menu-table tr.menu-editing {background-color: #99ccff;}
+#menu-table tr.menu-removing {background-color: red;}
+#menu-table th {padding-top: 12px; padding-bottom: 12px; background-color: DodgerBlue; color: white;}
+.menu-remove {text-align: center; color: white; background-color: #660000;}
+.menu-remove:hover {background-color: #f44336; color: black;}
+.menu-edit {text-align: center; color: white; background-color: #66ccff;}
+.menu-edit:hover {background-color: #99ccff; color: black;}
+.menu-left-pane-button {font-size: 16px; color: white; width: 100%; background-color: #003399; padding: 10px 10px; border: none; cursor: pointer; margin-top: 5px;}
+.menu-left-pane-button:hover {opacity:1; background-color: #0066ff; color: black;}
+.menu-right-pane-button {font-size: 16px; background-color: #3333ff; color: white; padding: 14px 20px; margin: 8px 0; border: none; cursor: pointer; width: 100%;}
+.menu-right-pane-button:hover {opacity: 0.8;}
+.centered {text-align: center;}
+.aligned-left {text-align: left;}
+.aligned-right {text-align: right;}
+input.bigger {zoom: 1.5;}
+.category-selector {background: transparent; width: 100%; height: 35px; font-family: Arial, Helvetica, sans-serif; font-size: 16px; direction: rtl; text-indent: 5px;}
+.staff-pane-grid-container {display: grid; grid-gap: 5px; grid-template-columns: 70% 30%; grid-template-rows: 75vh auto;}
+.staff-pane-list {grid-column: 1; grid-row: 1; overflow: scroll;}
+.staff-pane-edit {grid-column: 2; grid-row: 1; overflow-y: scroll; background-color: #eee; display: flex; justify-content: center;}
+.staff-pane-edit-heading {text-align: center; font-family: sans-serif; font-size: 20px;}
+.vertical-block {grid-column: 1; grid-row: 2; display: block; justify-content: center;}
+#staff-table {font-family: Arial, Helvetica, sans-serif; border-collapse: collapse; width: 100%; overflow-y: auto;}
+#staff-table th, #staff-table td {border-bottom: 1px solid #ddd; padding: 5px;}
+#staff-table tr:nth-child(even){background-color: #f2f2f2;}
+#staff-table tr:hover {background-color: #ddd; cursor: pointer;}
+#staff-table tr.staff-editing {background-color: #ffcc00;}
+#staff-table tr.staff-deactivating {background-color: red;}
+#staff-table tr.staff-reactivating {background-color: green;}
+#staff-table th {padding-top: 12px; padding-bottom: 12px; background-color: #996633; color: white;}
+.staff-deactivate {text-align: center; color: white; background-color: #660000;}
+.staff-deactivate:hover {background-color: #f44336; color: black;}
+.staff-reactivate {text-align: center; color: white; background-color: #006600;}
+.staff-reactivate:hover {background-color: #43f436; color: black;}
+.staff-deactivated {text-decoration: line-through; text-decoration-color: darkred;}
+.staff-edit {text-align: center; color: white; background-color: #cc9900;}
+.staff-edit:hover {background-color: #ffcc00; color: black;}
+.staff-left-pane-button {font-size: 16px; color: white; width: 100%; background-color: #663300; padding: 10px 10px; border: none; cursor: pointer;}
+.staff-left-pane-button:hover {opacity:1; background-color: #996600; color: black;}
+.staff-right-pane-button {font-size: 16px; background-color: #996600; color: white; padding: 14px 20px; margin: 8px 0; border: none; cursor: pointer; width: 100%;}
+.staff-right-pane-button:hover {opacity: 0.8;}
+.orders-pane-grid-container {display: grid; grid-gap: 5px; grid-template-columns: auto; grid-template-rows: 200px auto 50px;}
+.order-pane-query {grid-column: 1; grid-row: 1; overflow: scroll;}
+.order-pane-table {grid-column: 1; grid-row: 2; overflow: scroll;}
+.order-pane-statistics {grid-column: 1; grid-row: 3;}
+.orders-query-button {font-size: 16px; color: white; width: 100%; background-color: #663300; padding: 10px 10px; border: none; cursor: pointer;}
+.orders-query-button:hover {opacity:1; background-color: #996600; color: black;}
+#orders-table {font-family: Arial, Helvetica, sans-serif; border-collapse: collapse; width: 100%; overflow-y: auto;}
+#orders-table th, #orders-table tr {border-bottom: 1px solid #ddd; padding: 12px;}
+#orders-table tr:nth-child(even){background-color: #f2f2f2;}
+#orders-table td {padding: 8px;}
+#orders-table tr:hover {background-color: #ddd;}
+#orders-table th {padding-top: 12px; padding-bottom: 12px; background-color: #4CAF50; color: white;}
+#orders-table th:hover {cursor: pointer;}
+.orders-details-button {text-align: center; color: white; background-color: #006600;}
+.orders-details-button:hover {background-color: #43f436; color: black;}
+.order-details-modal {display: none; position: fixed; z-index: 1; left: 20vw; top: 20vh; width: 60vw; height: 60vh; overflow: auto; background-color: white; border-width: 3px; border-color: black; border-style: solid; padding: 5px; box-shadow: 0 5px 10px 0 rgba(0,0,0,0.4),0 20px 40px 0 rgba(0,0,0,0.2);}
+.order-details-close {width: 30px; padding: 12px 12px 12px 12px; color: white; background-color: #660000; float: right;}
+.order-details-close:hover {background-color: #f44336; color: white;}
+#details-table {font-family: Arial, Helvetica, sans-serif; border-collapse: collapse; width: 100%; overflow-y: auto;}
+#details-table th, #details-table tr {border-bottom: 1px solid #ddd; padding: 12px;}
+#details-table tr:nth-child(even){background-color: #f2f2f2;}
+#details-table td {padding: 8px;}
+#details-table tr:hover {background-color: #ddd;}
+#details-table th {padding-top: 12px; padding-bottom: 12px; background-color: #4CAF50; color: white;}
+#details-table th:hover {cursor: pointer;}
+.row {display: flex; flex-wrap: wrap; margin: 0 -16px;}
+.col-25 {flex: 25%;}
+.col-33 {flex: 15%;}
+.col-25, .col-33 {padding: 0 16px;}
+.orders-query-label {font-size: 16px; padding: 5px 10px;}
+.orders-statistics {font-size: 20px; padding: 15px; background-color: #4CAF50; color: white;}
+.starpoints-pane-grid-container {display: grid; grid-gap: 5px; grid-template-columns: 45% 55%; grid-template-rows: 260px auto 50px;}
+.starpoints-pane-customers {grid-column: 1; grid-row: 1 / span 2; overflow: scroll;}
+.starpoints-pane-query {grid-column: 2; grid-row: 1; overflow: scroll;}
+.starpoints-pane-orders {grid-column: 2; grid-row: 2; overflow: scroll;}
+.starpoints-pane-customers-statistics {grid-column: 1; grid-row: 3;}
+.starpoints-pane-orders-statistics {grid-column: 2; grid-row: 3;}
+#spcustomers-table {font-family: Arial, Helvetica, sans-serif; border-collapse: collapse; width: 100%; overflow-y: auto;}
+#spcustomers-table th, #spcustomers-table tr {border-bottom: 1px solid #ddd; padding: 12px;}
+#spcustomers-table tr:nth-child(even){background-color: #f2f2f2;}
+#spcustomers-table td {padding: 8px;}
+#spcustomers-table tr:hover {background-color: #ddd;}
+#spcustomers-table tr.spcustomer-editing {background-color: #ccff66;}
+#spcustomers-table th {padding-top: 12px; padding-bottom: 12px; background-color: #990000; color: white;}
+#spcustomers-table th:hover {cursor: pointer;}
+.spcustomer-details-button {text-align: center; color: white; background-color: #ff6600;}
+.spcustomer-details-button:hover {background-color: #ff9966; color: black;}
+.sporders-query-button {font-size: 16px; color: white; width: 100%; background-color: #cc6600; padding: 10px 10px; border: none; cursor: pointer;}
+.sporders-query-button:hover {opacity:1; background-color: #ff9900; color: black;}
+#sporders-table {font-family: Arial, Helvetica, sans-serif; border-collapse: collapse; width: 100%; overflow-y: auto;}
+#sporders-table th, #spcustomers-table tr {border-bottom: 1px solid #ddd; padding: 12px;}
+#sporders-table tr:nth-child(even){background-color: #f2f2f2;}
+#sporders-table td {padding: 8px;}
+#sporders-table tr:hover {background-color: #ddd;}
+#sporders-table th {padding-top: 12px; padding-bottom: 12px; background-color: #996600; color: white;}
+#sporders-table th:hover {cursor: pointer;}
+.spcustomer-modal {display: none; position: fixed; z-index: 1; left: 45vw; top: 10vh; width: 40vw; height: 550px; overflow: auto; background-color: white; border-width: 3px; border-color: black; border-style: solid; padding: 5px; box-shadow: 0 5px 10px 0 rgba(0,0,0,0.4),0 20px 40px 0 rgba(0,0,0,0.2);}
+.spcustomer-modal-content {width: 100%; font-family: sans-serif; background-color: #fefefe;}
+.spcustomer-container {padding: 16px;}
+.spcustomer-cancel, .spcustomer-signup {font-size: 16px; float: left; width: 50%; background-color: #4CAF50; color: white; padding: 14px 20px; margin: 8px 0; border: none; cursor: pointer; opacity: 0.9;}
+.spcustomer-cancel {background-color: #f44336;}
+.spcustomer-cancel:hover, .spcustomer-signup:hover {opacity:1;}
+.starpoints-customers-statistics {font-size: 20px; padding: 15px; background-color: #990000; color: white;}
+.starpoints-orders-statistics {font-size: 20px; padding: 15px; background-color: #996600; color: white;}
+hr {border: 1px solid #f1f1f1; margin-bottom: 25px;}
+.sporder-clearfix::after {content: ""; clear: both; display: table;}
+.sporders-details-button {text-align: center; color: white; background-color: #663300;}
+.sporders-details-button:hover {background-color: #ff9900; color: black;}
+.sporder-details-modal {display: none; position: fixed; z-index: 1; left: 10vw; top: 30vh; width: 35vw; height: 40vh; overflow: auto; background-color: white; border-width: 3px; border-color: black; border-style: solid; padding: 5px; box-shadow: 0 5px 10px 0 rgba(0,0,0,0.4),0 20px 40px 0 rgba(0,0,0,0.2);}
+.sporder-details-close {width: 30px; padding: 12px 12px 12px 12px; color: white; background-color: #660000; float: right;}
+.sporder-details-close:hover {background-color: #f44336; color: white;}
+#spdetails-table {font-family: Arial, Helvetica, sans-serif; border-collapse: collapse; width: 100%; overflow-y: auto;}
+#spdetails-table th, #details-table tr {border-bottom: 1px solid #ddd; padding: 12px;}
+#spdetails-table tr:nth-child(even){background-color: #f2f2f2;}
+#spdetails-table td {padding: 8px;}
+#spdetails-table tr:hover {background-color: #ddd;}
+#spdetails-table th {padding-top: 12px; padding-bottom: 12px; background-color: #996600; color: white;}
+#spdetails-table th:hover {cursor: pointer;}
+
+</style>
+
+<body>
+  <!-- Tab links -->
+  <div class="topmenu">
+    <button class="topmenuitem active" onclick="openPane(event, 'menus-pane')">Menus</button>
+    <button class="topmenuitem" onclick="openPane(event, 'staff-pane')">Staff</button>
+    <button class="topmenuitem" onclick="openPane(event, 'orders-pane')">Orders</button>
+    <button class="topmenuitem" onclick="openPane(event, 'starpoints-pane')">Star Points</button>
+    <button class="topmenuitem" onclick="cashdesk();">Cashdesk</button>
+    <button class="topmenuitem logout" onclick="location.href='/staff/logout';">Logout</button>
+  </div>
+
+  <!-- Tab content -->
+  <div id="menus-pane" class="pane">
+    <div class="menus-pane-grid-container">
+      <div class="grid-item menus-pane-list">
+        <table id="menu-table">
+            <tr>
+              <th class="aligned-left" onclick="sortTable('menu-table', 0, 'asc', 'str')">Item</th>
+              <th class="aligned-left" style="width: 90px" onclick="sortTable('menu-table', 1, 'asc', 'str')">Category</th>
+              <th class="aligned-right" style="width: 90px" onclick="sortTable('menu-table', 2, 'asc', 'float')">Price</th>
+              <th class="centered" style="width: 70px">Edit</th>
+              <th class="centered" style="width: 90px">Remove</th>
+            </tr>
+        </table>
+        <div class="vertical-block">
+          <button class="menu-left-pane-button" type="button" onclick="newMenu()">+ New Menu Item</button>
+        </div>
+      </div>
+      <div class="grid-item menus-pane-edit">
+        <form id="menu-item-form">
+        <p class="menus-pane-edit-heading" id="menu-edit-heading">Create New Menu Item</p>
+        <table id="edit-table">
+          <tr>
+              <td><label for="item">Item</label></td>
+              <td><input class="aligned-right" type="text" name="item" id="item" required></td>
+          </tr>
+          <tr>
+              <td><label for="category">Category</label></td>
+              <td>
+                <select class="category-selector aligned-right" name="category" id="category"></select>
+              </td>
+          </tr>
+          <tr>
+              <td><label for="price">Price</label></td>
+              <td><input type="number" name="price" id="price" placeholder="0.00" min="0.00" max="99.99" step="0.01" required></td>
+          </tr>
+          <tr style="display: none;">
+              <td><input type="text" name="itemid" id="itemid">0</input></td>
+          </tr>
+        </table>
+        <button class="menu-right-pane-button" type="button" id="menu-right-pane-button" onclick="createMenu()">New Menu item</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="staff-pane" class="pane">
+    <div class="staff-pane-grid-container">
+      <div class="grid-item staff-pane-list">
+        <table id="staff-table">
+            <tr>
+              <th class="aligned-left" style="width: 150px" onclick="sortTable('staff-table', 0, 'asc', 'str')">Login name</th>
+              <th class="aligned-left" onclick="sortTable('staff-table', 1, 'asc', 'str')">E-mail</th>
+              <th class="centered" style="width: 70px" onclick="sortTable('staff-table', 2, 'asc', 'checkbox')">Locked</th>
+              <th class="centered" style="width: 70px" onclick="sortTable('staff-table', 3, 'asc', 'checkbox')">Admin</th>
+              <th class="centered" style="width: 70px">Edit</th>
+              <th class="centered" style="width: 100px" onclick="sortTable('staff-table', 5, 'asc', 'str')">De/activate</th>
+            </tr>
+        </table>
+      </div>
+      <div class="grid-item staff-pane-edit">
+        <form id="staff-user-form">
+        <p class="staff-pane-edit-heading" id="staff-edit-heading">Create New Staff User</p>
+        <table id="edit-table">
+        <tr>
+            <td><label for="username" id="edit-label">Username</label></td>
+            <td><input type="text" name="username" id="username" placeholder="Enter username ..." required></td>
+        </tr>
+        <tr>
+          <td><label for="email" id="edit-label">E-mail</label></td>
+          <td><input type="email" name="email" id="email" placeholder="Enter e-mail ..." required></td>
+        </tr>
+        <tr>
+            <td><label for="password">Password</label></td>
+            <td><input type="password" name="password" id="password" placeholder="Enter password ..." required></td>
+        </tr>
+        <tr>
+            <td><label for="confirm-password">Confirm password</label></td>
+            <td><input type="password" name="confirm-password" id="confirm-password" placeholder="Confirm password..." required></td>
+        </tr>
+        <tr>
+            <td><label for="is_admin">Admin rights</label></td>
+            <td><input type="checkbox" class="bigger" name="is_admin" id="is_admin" required></td>
+        </tr>
+        <tr style="display: none;">
+            <td><input type="text" name="userid" id="userid">0</input></td>
+        </tr>
+        </table>
+        <button class="staff-right-pane-button" type="button" onclick="createStaff()" id="staff-edit-button">Create Staff User</button>
+        </form>
+      </div>
+      <div class="grid-item vertical-block">
+          <button class="staff-left-pane-button" type="button" onclick="newUser()">+ New Staff user</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="orders-pane" class="pane">
+    <div id="order-details" class="order-details-modal">
+      <span style="float:left; padding: 10px 10px;">Order details</span>
+      <span onclick="document.getElementById('order-details').style.display='none'" class="order-details-close" title="Close Order Details">&times;</span>
+      <table id="details-table">
+        <tr>
+          <th class="aligned-left">Item</th>
+          <th class="centered" style="width: 80px;">Price</th>
+          <th class="aligned-right" style="width: 80px;">Qty</th>
+        </tr>
+      </table>
+    </div>
+    <div class="order-pane-grid-container">
+      <div class="grid-item orders-pane-query">
+        <div class="row">
+          <div class="col-25">
+            <form id="orders-query-dates">
+              <table>
+                <tr>
+                  <td class="orders-query-label">All dates</td>
+                  <td><input type="radio" name="orders-dates" id="orders-dates-any" checked></td>
+                </tr>
+                <tr>
+                  <td class="orders-query-label">Today</td>
+                  <td><input type="radio" name="orders-dates" id="orders-dates-today"></td>
+                </tr>
+                <tr>
+                  <td class="orders-query-label">Yesterday</td>
+                  <td><input type="radio" name="orders-dates" id="orders-dates-yesterday"></td>
+                </tr>
+                <tr>
+                  <td class="orders-query-label">Dates range</td>
+                  <td><input type="radio" name="orders-dates" id="orders-dates-range"></td>
+                </tr>
+                <tr>
+                  <td class="orders-query-label">Before:</td>
+                  <td><input type="date" name="orders-dates-before" id="orders-dates-before"></td>
+                </tr>
+                <tr>
+                  <td class="orders-query-label">After:</td>
+                  <td><input type="date" name="orders-dates-after" id="orders-dates-after"></td>
+                </tr>
+              </table>
+            </form>
+          </div>
+          <div class="col-25">
+            <form id="orders-query-cashiers">
+              <table>
+                <tr>
+                  <td class="orders-query-label">All cashiers</td>
+                  <td><input type="radio" name="orders-cashiers" id="orders-cashiers-any" checked></td>
+                </tr>
+                <tr>
+                  <td class="orders-query-label">Specific</td>
+                  <td><input type="radio" name="orders-cashiers" id="orders-cashiers-specific"></td>
+                </tr>
+                <tr>
+                  <td class="orders-query-label">Login</td>
+                  <td><input type="text"  id="orders-cashier-login"></td>
+                </tr>
+              </table>
+            </form>
+          </div>
+          <div class="col-25">
+            <form id="orders-query-customers">
+              <table>
+                <tr>
+                  <td class="orders-query-label">All Customers</td>
+                  <td><input type="radio" name="orders-customers" id="orders-customers-any" checked></td>
+                </tr>
+                <tr>
+                  <td class="orders-query-label">Specific</td>
+                  <td><input type="radio" name="orders-customers" id="orders-customers-specific"></td>
+                </tr>
+                <tr>
+                  <td class="orders-query-label">Nick</td>
+                  <td><input type="text"  id="orders-customer-nick"></td>
+                </tr>
+              </table>
+            </form>
+          </div>
+          <div class="col-25">
+            <form id="orders-query-points">
+              <table>
+                <tr>
+                  <td class="orders-query-label">All points</td>
+                  <td><input type="radio" name="orders-points" id="orders-points-any" checked></td>
+                </tr>
+                <tr>
+                  <td class="orders-query-label">With points</td>
+                  <td><input type="radio" name="orders-points" id="orders-points-with"></td>
+                </tr>
+                <tr>
+                  <td class="orders-query-label">Without points</td>
+                  <td><input type="radio"  name="orders-points" id="orders-points-without"></td>
+                </tr>
+              </table>
+            </form>
+          </div>
+        </div>
+        <button class="orders-query-button" type=button onclick="ordersQuery()">Query</button>
+      </div>
+      <div class="grid-item orders-pane-table">
+        <table id="orders-table">
+          <tr>
+            <th class="aligned-left" onclick="sortTable('orders-table', 0, 'desc', 'str')">Date & time</th>
+            <th onclick="sortTable('orders-table', 1, 'asc', 'str')">Cashier</th>
+            <th class="aligned-right" onclick="sortTable('orders-table', 2, 'asc', 'float')">Total</th>
+            <th onclick="sortTable('orders-table', 3, 'asc', 'str')">Customer</th>
+            <th class="aligned-right" onclick="sortTable('orders-table', 4, 'asc', 'int')">Points</th>
+            <th style="width:80px;">Details</th>
+          </tr>
+        </table>
+      </div>
+      <div class="grid-item orders-pane-statistics">
+        <p class="orders-statistics" id="orders-sum">Sum of orders Total: 0, Star Points accumulated: 0</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="starpoints-pane" class="pane">
+    <div id="spcustomerform" class="spcustomer-modal">
+    <form class="spcustomer-modal-content">
+      <span onclick="spcustomerEditCancel()" class="order-details-close" title="Close Star point Customer Edit Form">&times;</span>
+      <div class="spcustomer-container">
+        <h3>Star Points Customer Edit Details</h3>
+        <hr>
+        <label for="spcustomername"><b>Name</b></label>
+        <input type="text" placeholder="Enter Name..." id="spcustomername" name="spcustomername" required>
+        <label for="spcustomernick"><b>Nickname</b></label>
+        <input type="text" placeholder="Enter nickname..." id="spcustomernick" name="spcustomernick" required>
+        <label for="spcustomeremail"><b>Email</b></label>
+        <input type="email" placeholder="Enter Email..." id="spcustomeremail" name="spcustomeremail" required>
+        <label for="spcustomerpoints"><b>Points</b></label>
+        <input type="number" placeholder="Enter points..." id="spcustomerpoints" name="spcustomerpoints" required>
+        <input type="text" id="spcustomerid" name="spcustomerid" style="display: none;">
+        <hr>
+        <div class="sporder-clearfix">
+          <button type="button" onclick="spcustomerEditCancel()" class="spcustomer-cancel">Cancel</button>
+          <button type="button" onclick="spcustomerUpdate();" class="spcustomer-signup">Update</button>
+        </div>
+      </div>
+    </form>
+    </div>
+    <div id="sporder-details" class="sporder-details-modal">
+      <span style="float:left; padding: 10px 10px;">Star Points Order details</span>
+      <span onclick="document.getElementById('sporder-details').style.display='none'" class="sporder-details-close" title="Close Order Details">&times;</span>
+      <table id="spdetails-table">
+        <tr>
+          <th class="aligned-left">Item</th>
+          <th class="aligned-right" style="width: 80px;">Qty</th>
+        </tr>
+      </table>
+    </div>
+    <div class="starpoints-pane-grid-container">
+      <div class="grid-item starpoints-pane-customers">
+        <table id="spcustomers-table">
+          <tr>
+            <th onclick="sortTable('spcustomers-table', 0, 'asc', 'str')">Nick</th>
+            <th onclick="sortTable('spcustomers-table', 1, 'asc', 'str')">Name</th>
+            <th class="aligned-right" onclick="sortTable('spcustomers-table', 2, 'desc', 'int')">Outstanding</th>
+            <th class="aligned-right" onclick="sortTable('spcustomers-table', 3, 'desc', 'int')">Cumulative</th>
+            <th>Edit</th>
+          </tr>
+        </table>
+      </div>
+      <div class="grid-item starpoints-pane-customers-statistics">
+        <p class="starpoints-customers-statistics" id="starpoints-customers-total">Sum of outstanding points: 0</p>
+      </div>
+      <div class="grid-item starpoints-pane-query">
+        <div class="row">
+          <div class="col-33">
+            <form id="sporders-query-dates">
+              <table>
+                <tr>
+                  <td class="orders-query-label">All dates</td>
+                  <td><input type="radio" name="sporders-dates" id="sporders-dates-any" checked></td>
+                </tr>
+                <tr>
+                  <td class="orders-query-label">Today</td>
+                  <td><input type="radio" name="sporders-dates" id="sporders-dates-today"></td>
+                </tr>
+                <tr>
+                  <td class="orders-query-label">Yesterday</td>
+                  <td><input type="radio" name="sporders-dates" id="sporders-dates-yesterday"></td>
+                </tr>
+                <tr>
+                  <td class="orders-query-label">Dates range</td>
+                  <td><input type="radio" name="sporders-dates" id="sporders-dates-range"></td>
+                </tr>
+                <tr>
+                  <td class="orders-query-label">Before:</td>
+                  <td><input type="date" name="sporders-dates-before" id="sporders-dates-before"></td>
+                </tr>
+                <tr>
+                  <td class="orders-query-label">After:</td>
+                  <td><input type="date" name="sporders-dates-after" id="sporders-dates-after"></td>
+                </tr>
+              </table>
+            </form>
+          </div>
+          <div class="col-33">
+            <form id="sporders-query-cashiers">
+              <table>
+                <tr>
+                  <td class="orders-query-label">All cashiers</td>
+                  <td><input type="radio" name="sporders-cashiers" id="sporders-cashiers-any" checked></td>
+                </tr>
+                <tr>
+                  <td class="orders-query-label">Specific</td>
+                  <td><input type="radio" name="sporders-cashiers" id="sporders-cashiers-specific"></td>
+                </tr>
+                <tr>
+                  <td class="orders-query-label">Login</td>
+                  <td><input type="text"  id="sporders-cashier-login"></td>
+                </tr>
+              </table>
+            </form>
+          </div>
+          <div class="col-33">
+            <form id="sporders-query-customers">
+              <table>
+                <tr>
+                  <td class="orders-query-label">All Customers</td>
+                  <td><input type="radio" name="sporders-customers" id="sporders-customers-any" checked></td>
+                </tr>
+                <tr>
+                  <td class="orders-query-label">Specific</td>
+                  <td><input type="radio" name="sporders-customers" id="sporders-customers-specific"></td>
+                </tr>
+                <tr>
+                  <td class="orders-query-label">Nick</td>
+                  <td><input type="text"  id="sporders-customer-nick"></td>
+                </tr>
+              </table>
+            </form>
+          </div>
+        </div>
+        <button class="sporders-query-button" type=button onclick="spordersQuery()">Query</button>
+      </div>
+      <div class="grid-item starpoints-pane-orders">
+        <table id="sporders-table">
+          <tr>
+            <th onclick="sortTable('sporders-table', 0, 'desc', 'str')">Date</th>
+            <th onclick="sortTable('sporders-table', 1, 'asc', 'str')">Customer</th>
+            <th class="aligned-right" onclick="sortTable('sporders-table', 2, 'desc', 'int')">Points</th>
+            <th onclick="sortTable('sporders-table', 3, 'asc', 'str')">Cashier</th>
+            <th>Details</th>
+          </tr>
+        </table>
+      </div>
+      <div class="grid-item starpoints-pane-orders-statistics">
+        <p class="starpoints-orders-statistics" id="starpoints-orders-total">Sum of Star Points used: 0</p>
+      </div>
+    </div>
+  </div>
+
+<script>
+const sessionUser = "{{ g.user['username'] }}";
+let staffPaneLazyFetch = true;
+let spPaneLazyFetch = true;
+
+function cashdesk() {
+  window.location.assign("{{ url_for('cashdesk.main_page') }}");
+}
+
+function openPane(evt, paneName) {
+  currentPane.style.display = "none";
+  activeButton = document.getElementsByClassName("topmenuitem active")[0];
+  activeButton.className = "topmenuitem";
+  currentPane = document.getElementById(paneName)
+  currentPane.style.display = "block";
+  evt.currentTarget.className += " active";
+  if (paneName == 'staff-pane' & staffPaneLazyFetch) {
+    staffPaneLazyFetch = false;
+    fetchStaffList();
+  } else if (paneName == 'starpoints-pane' & spPaneLazyFetch) {
+    spPaneLazyFetch = false;
+    fetchSPCustomerList();
+  };
+}
+
+// General helper functions:
+
+function httpQuery(url, method, cFunction) {
+  // Create new XMLHttpRequest with 'url', 'method' and callback 'cFunction'
+  // 'url' must be a string, 'method' can be 'GET', 'POST', 'PUT', etc.
+  let xhttp;
+  xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4) {
+      cFunction(this);
+    }
+  };
+  xhttp.open(method, url, true);
+  xhttp.send();
+}
+
+function flashMessage(msg) {
+  window.alert(msg);
+}
+
+function sortTable(tableName, colNum, direction, contentType) {
+  // Sorts Table rows based on specific Column, in speficied direction
+  // 'tableName' - string with HTML Element ID of Table to sort
+  // 'colNum' - integer column number, starting with 0
+  // direction - string 'asc' for ascending, 'desc' for descending
+  // contentType - string describing TD content type, 'str' for String, 'int' for Integer, 'float' for Float, 'checkbox' for Checkbox
+  const table = document.getElementById(tableName);
+  let i,j;
+
+  if (table == null) {
+    console.log("sortTable() - cannot find table "+tableName);
+    return;
+  }
+  let tableRows = table.rows;
+
+  if (direction == 'asc') {
+    for (i=1; i<(tableRows.length-1); i++) {
+      for (j=2; j<=(tableRows.length-i); j++) {
+        switch (contentType) {
+          case "str":
+            if (tableRows[j-1].children[colNum].innerHTML > tableRows[j].children[colNum].innerHTML) {
+              table.insertBefore(tableRows[j], tableRows[j-1]);
+            };
+            break;
+          case "float":
+            if (parseFloat(tableRows[j-1].children[colNum].innerHTML) > parseFloat(tableRows[j].children[colNum].innerHTML)) {
+              table.insertBefore(tableRows[j], tableRows[j-1]);
+            };
+            break;
+            case "int":
+              if (parseInt(tableRows[j-1].children[colNum].innerHTML) > parseInt(tableRows[j].children[colNum].innerHTML)) {
+                table.insertBefore(tableRows[j], tableRows[j-1]);
+              };
+              break;
+          case "checkbox":
+          // this one is different: we want checked on top in 'asc'
+            if (tableRows[j-1].children[colNum].children[0].checked < tableRows[j].children[colNum].children[0].checked) {
+              table.insertBefore(tableRows[j], tableRows[j-1]);
+            };
+            break;
+        };
+      };
+    };
+    tableRows[0].children[colNum].onclick= function () {
+      sortTable(tableName, colNum, 'desc', contentType);
+    };
+  } else if (direction == 'desc') {
+    for (i=1; i<(tableRows.length-1); i++) {
+      for (j=2; j<=(tableRows.length-i); j++) {
+        switch (contentType) {
+          case "str":
+            if (tableRows[j-1].children[colNum].innerHTML < tableRows[j].children[colNum].innerHTML) {
+              table.insertBefore(tableRows[j], tableRows[j-1]);
+            };
+            break;
+          case "float":
+            if (parseFloat(tableRows[j-1].children[colNum].innerHTML) < parseFloat(tableRows[j].children[colNum].innerHTML)) {
+              table.insertBefore(tableRows[j], tableRows[j-1]);
+            };
+            break;
+          case "int":
+            if (parseInt(tableRows[j-1].children[colNum].innerHTML) < parseInt(tableRows[j].children[colNum].innerHTML)) {
+              table.insertBefore(tableRows[j], tableRows[j-1]);
+            };
+            break;
+          case "checkbox":
+          // this one is different: we want unchecked on top in 'desc'
+            if (tableRows[j-1].children[colNum].children[0].checked > tableRows[j].children[colNum].children[0].checked) {
+              table.insertBefore(tableRows[j], tableRows[j-1]);
+            };
+            break;
+        };
+      };
+    };
+    tableRows[0].children[colNum].onclick= function () {
+      sortTable(tableName, colNum, 'asc', contentType);
+    };
+  };
+}
+
+let currentPane = document.getElementById("menus-pane");
+currentPane.style.display = "block";
+
+// Menu pane functions
+
+function addMenuTableRow(id, item, category, price) {
+  // Create new row in format of 'menu-table'
+  // 'menu-table' Columns: item [0], category [1], price [2], edit button [3], remove button [4], id (hidden) [5]
+    let row = document.createElement("tr");
+  // Create "td" for item
+    let td = document.createElement("td");
+    let txt = document.createTextNode(item);
+    td.appendChild(txt);
+    row.appendChild(td);
+  // Create "td" for category
+    td = document.createElement("td");
+    txt = document.createTextNode(category);
+    td.appendChild(txt);
+    row.appendChild(td);
+  // Create "td" for price
+    td = document.createElement("td");
+    txt = document.createTextNode(price);
+    td.appendChild(txt);
+    td.className = "aligned-right";
+    row.appendChild(td);
+  // Create "td" for edit button
+    td = document.createElement("td");
+    txt = document.createTextNode("Edit");
+    td.appendChild(txt);
+    td.className = "menu-edit";
+    td.onclick = function(ev) {
+      menuEdit(ev.target);
+    };
+    row.appendChild(td);
+  // Create "td" for remove button
+    td = document.createElement("td");
+    txt = document.createTextNode("Remove");
+    td.appendChild(txt);
+    td.className = "menu-remove";
+    td.onclick = function(ev) {
+      menuRemove(ev.target);
+    };
+    row.appendChild(td);
+  // Create hidden "td" for 'id'
+    td = document.createElement("td");
+    txt = document.createTextNode(id);
+    td.appendChild(txt);
+    td.style.display = "none";
+    row.appendChild(td);
+    document.getElementById("menu-table").appendChild(row);
+}
+
+fetchMenuList();
+
+function fetchMenuList () {
+  httpQuery("{{ url_for('admin.menu') }}", 'GET', fetchMenuListParseResponse);
+}
+
+function fetchMenuListParseResponse(xhttp) {
+  if (xhttp.status == 200) {
+    let menuListJSON = xhttp.responseText;
+    let menuList = JSON.parse(menuListJSON)['menu']; // All Menu List fields are strings!
+    let categories = JSON.parse(menuListJSON)['categories'];
+
+    let i, row;
+    for (i=0; i<menuList.length; i++) {
+      addMenuTableRow(menuList[i].id, menuList[i].item, menuList[i].category, menuList[i].price);
+    };
+    sortTable('menu-table', 1, 'asc', 'str'); // sort Menu Table ascending on Category column
+
+    let categorySelector = document.getElementById("category");
+
+    let option;
+    for (i=0; i<categories.length; i++) {
+      option = document.createElement("option");
+      option.text = categories[i];
+      option.direction = "rtl";
+      categorySelector.add(option);
+    };
+  } else {
+    window.alert("Failed to fetch Menu list!\n"+xhttp.responseText);
+  };
+}
+
+function menuEdit(elmnt) {
+  let menuItemTR = elmnt.parentElement;
+  // 'menu-table' Columns: item [0], category [1], price [2], edit button [3], remove button [4], id (hidden) [5]
+
+  document.getElementById("menu-edit-heading").innerHTML = "Edit Menu Item"
+  document.getElementById("itemid").value = menuItemTR.children[5].innerHTML;
+  document.getElementById("item").value = menuItemTR.children[0].innerHTML;
+  document.getElementById("category").value = menuItemTR.children[1].innerHTML;
+  document.getElementById("price").value = menuItemTR.children[2].innerHTML;
+  document.getElementById("menu-right-pane-button").innerText = 'Update Menu Item';
+  document.getElementById("menu-right-pane-button").onclick = updateMenu;
+  let oldEditedRows = document.getElementsByClassName("menu-editing");
+  if (oldEditedRows.length>0) {
+    let i;
+    for (i=0; i<oldEditedRows.length; i++) {
+      oldEditedRows[i].classList.remove("menu-editing");
+    };
+  };
+  elmnt.parentElement.classList.add("menu-editing");
+}
+
+function newMenu() {
+  document.getElementById("menu-edit-heading").innerHTML = "Create New Menu Item";
+  document.getElementById("itemid").value = '';
+  document.getElementById("item").value = '';
+  document.getElementById("category").value = 'Coffee';
+  document.getElementById("price").value = '0.00';
+  document.getElementById("menu-right-pane-button").innerText = 'New Menu Item';
+  document.getElementById("menu-right-pane-button").onclick = createMenu;
+  let oldEditedRows = document.getElementsByClassName("menu-editing");
+  if (oldEditedRows.length>0) {
+    let i;
+    for (i=0; i<oldEditedRows.length; i++) {
+      oldEditedRows[i].classList.remove("menu-editing");
+    };
+  };
+}
+
+function updateMenu() {
+  const itemid = document.getElementById("itemid").value;
+  const item = document.getElementById("item").value;
+  const category = document.getElementById("category").value;
+  const rawPrice = document.getElementById("price").value;
+  let price = Math.trunc(rawPrice*100.0)/100.0;
+
+  if (item == '') {
+    window.alert("Item name cannot be empty!");
+    return;
+  }
+  if (price < 0.0) {
+    window.alert("Price must be >= 0.00");
+    return;
+  };
+  if (price > 99.99) {
+    window.alert("Price must be <= 99.99");
+    return;
+  };
+
+  document.getElementById("price").value = price.toFixed(2);
+
+  let queryString = "?id="+itemid+"&item="+item+"&category="+category+"&price="+price.toFixed(2);
+  httpQuery("{{ url_for('admin.menu') }}"+queryString, 'PUT', updateMenuParseResponse);
+}
+
+function updateMenuParseResponse(xhttp) {
+  if (xhttp.status == 200) {
+    const editedRow = document.getElementsByClassName("menu-editing")[0];
+    editedRow.classList.remove("menu-editing");
+    editedRow.children[0].innerHTML = document.getElementById("item").value;
+    editedRow.children[1].innerHTML = document.getElementById("category").value;
+    let price = document.getElementById("price").value*1.0;
+    editedRow.children[2].innerHTML = price.toFixed(2);
+    newMenu();
+  } else {
+    window.alert("Failed to update Menu item!\n"+xhttp.responseText);
+  };
+}
+
+function createMenu() {
+  const item = document.getElementById("item").value;
+  const category = document.getElementById("category").value;
+  const rawPrice = document.getElementById("price").value;
+  let price = Math.trunc(rawPrice*100.0)/100.0;
+
+  if (item == '') {
+    window.alert("Item name cannot be empty!");
+    return;
+  }
+  if (price < 0.0) {
+    window.alert("Price must be >= 0.00");
+    return;
+  };
+  if (price > 99.99) {
+    window.alert("Price must be <= 99.99");
+    return;
+  };
+
+  document.getElementById("price").value = price.toFixed(2);
+
+  let queryString = "?item="+item+"&category="+category+"&price="+price.toFixed(2);
+  httpQuery("{{ url_for('admin.menu') }}"+queryString, 'POST', createMenuParseResponse);
+}
+
+function createMenuParseResponse(xhttp) {
+  if (xhttp.status == 200) {
+    const itemid = xhttp.responseText;
+    const item = document.getElementById("item").value;
+    const category = document.getElementById("category").value;
+    const price = document.getElementById("price").value;
+    addMenuTableRow(itemid, item, category, price);
+    newMenu();
+  } else {
+    window.alert("Failed to update Menu item!\n"+xhttp.responseText);
+  };
+}
+
+function menuRemove(elmnt) {
+  let item = elmnt.parentElement.children[0].innerHTML;
+  let itemID = elmnt.parentElement.children[5].innerHTML;
+
+  elmnt.parentElement.classList.add("menu-removing");
+  if (window.confirm("Do you really want to remove menu item "+item+"?")) {
+    const queryString = "?id="+itemID;
+    httpQuery("{{ url_for('admin.menu') }}"+queryString, 'DELETE', menuRemoveParseResponse)
+  } else {
+    elmnt.parentElement.classList.remove("menu-removing");
+  }
+}
+
+function menuRemoveParseResponse(xhttp) {
+  let removedRow = document.getElementsByClassName("menu-removing")[0];
+  if (xhttp.status == 200) {
+    removedRow.parentElement.removeChild(removedRow);
+  } else {
+    window.alert("Failed to remove menu item!\n"+xhttp.responseText);
+    removedRow.classList.remove("menu-removing");
+  }
+}
+
+// Staff pane functions:
+
+function addStaffTableRow(id, username, email, locked, is_admin, is_active) {
+  // Create new row in format of 'staff-table'
+  // 'is_admin' must either string "1" for True or "0" for False
+  // 'staff-table' Columns: username [0], email [1], locked [2], is_admin [3], edit button [4], remove button [5], id (hidden) [6]
+    let row = document.createElement("tr");
+  // Create "td" for 'username'
+    let td = document.createElement("td");
+    let txt = document.createTextNode(username);
+    td.appendChild(txt);
+    if (is_active == 0) {
+      td.classList.add("staff-deactivated");
+    }
+    row.appendChild(td);
+  // Create "td" for 'email'
+    td = document.createElement("td");
+    txt = document.createTextNode(email);
+    td.appendChild(txt);
+    if (is_active == 0) {
+      td.classList.add("staff-deactivated");
+    }
+    row.appendChild(td);
+  // Create "td" for 'locked' checkbox
+    td = document.createElement("td");
+    let checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.onclick = function(ev) {
+      unlockAccount(ev.target);
+    };
+    checkbox.className = "bigger";
+    checkbox.checked = (locked == "1");
+    td.className = "centered";
+    td.appendChild(checkbox);
+    row.appendChild(td);
+  // Create "td" for 'is_admin' checkbox
+    td = document.createElement("td");
+    checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.onclick = function(ev) {
+      adminStatusChange(ev.target);
+    };
+    checkbox.className = "bigger";
+    checkbox.checked = (is_admin == "1");
+    td.className = "centered";
+    td.appendChild(checkbox);
+    row.appendChild(td);
+  // Create "td" for edit button
+    td = document.createElement("td");
+    txt = document.createTextNode("Edit");
+    td.appendChild(txt);
+    td.className = "staff-edit";
+    if (is_active == 1) {
+      td.onclick = function(ev) {
+        staffEdit(ev.target);
+      };
+    } else {
+      td.classList.add("staff-deactivated");
+    }
+    row.appendChild(td);
+  // Create "td" for remove button
+    td = document.createElement("td");
+    if (is_active == 1) {
+      txt = document.createTextNode("Deactivate");
+      td.appendChild(txt);
+      td.className = "staff-deactivate";
+      td.onclick = function(ev) {
+        staffDeactivate(ev.target);
+      };
+    } else {
+      txt = document.createTextNode("Reactivate");
+      td.appendChild(txt);
+      td.className = "staff-reactivate";
+      td.onclick = function(ev) {
+        staffActivate(ev.target);
+      };
+    }
+    row.appendChild(td);
+  // Create hidden "td" for 'id'
+    td = document.createElement("td");
+    txt = document.createTextNode(id);
+    td.appendChild(txt);
+    td.style.display = "none";
+    row.appendChild(td);
+    document.getElementById("staff-table").appendChild(row);
+}
+
+function fetchStaffList () {
+  httpQuery("{{ url_for('admin.staff') }}", 'GET', fetchStaffListParseResponse);
+}
+
+function fetchStaffListParseResponse(xhttp) {
+  if (xhttp.status == 200) {
+    let staffListJSON = xhttp.responseText;
+    let staffList = JSON.parse(staffListJSON); // All Staff List fields are strings!
+    for (i=0; i<staffList.length; i++) {
+      addStaffTableRow(staffList[i].id, staffList[i].username, staffList[i].email, staffList[i].locked, staffList[i].is_admin, staffList[i].is_active);
+    };
+    sortTable('staff-table', 5, 'asc', 'str');
+  } else {
+    window.alert("Failed to fetch Staff list!\n"+xhttp.responseText);
+  };
+}
+
+function staffDeactivate(elmnt) {
+  let staffUser = elmnt.parentElement.children[0].innerHTML;
+  let staffUserID = elmnt.parentElement.children[6].innerHTML;
+  if (staffUser == sessionUser) {
+    flashMessage("You cannot deactivate yourself!");
+  } else {
+    elmnt.parentElement.classList.add("staff-deactivating");
+    if (window.confirm("Do you really want to deactivate staff user "+staffUser+"?")) {
+      const queryString = "?is_active=false&id="+staffUserID;
+      httpQuery("{{ url_for('admin.staff') }}"+queryString, 'PUT', staffDeactivateParseResponse)
+    } else {
+      elmnt.parentElement.classList.remove("staff-deactivating");
+    }
+  }
+}
+
+function staffDeactivateParseResponse(xhttp) {
+  let deactivatedRow = document.getElementsByClassName("staff-deactivating")[0];
+  if (xhttp.status == 200) {
+    deactivatedRow.children[0].classList.add("staff-deactivated");
+    deactivatedRow.children[1].classList.add("staff-deactivated");
+    deactivatedRow.children[4].classList.add("staff-deactivated");
+    deactivatedRow.children[4].onclick = function(ev) {
+      return false;
+    };
+    deactivatedRow.children[5].innerHTML = "Reactivate";
+    deactivatedRow.children[5].className = "staff-reactivate";
+    deactivatedRow.children[5].onclick = function(ev) {
+      staffActivate(ev.target);
+    };
+    deactivatedRow.classList.remove("staff-deactivating");
+    sortTable('staff-table', 5, 'asc', 'str');
+  } else {
+    window.alert("Failed to deactivate Staff user!\n"+xhttp.responseText);
+    deactivatedRow.classList.remove("staff-deactivating");
+  }
+}
+
+function staffActivate(elmnt) {
+  let staffUser = elmnt.parentElement.children[0].innerHTML;
+  let staffUserID = elmnt.parentElement.children[6].innerHTML;
+  elmnt.parentElement.classList.add("staff-reactivating");
+  if (window.confirm("Do you really want to activate staff user "+staffUser+"?")) {
+    const queryString = "?is_active=true&id="+staffUserID;
+    httpQuery("{{ url_for('admin.staff') }}"+queryString, 'PUT', staffActivateParseResponse)
+  } else {
+    elmnt.parentElement.classList.remove("staff-reactivating");
+  }
+
+}
+
+function staffActivateParseResponse(xhttp) {
+  let deactivatedRow = document.getElementsByClassName("staff-reactivating")[0];
+  if (xhttp.status == 200) {
+    deactivatedRow.children[0].classList.remove("staff-deactivated");
+    deactivatedRow.children[1].classList.remove("staff-deactivated");
+    deactivatedRow.children[4].classList.remove("staff-deactivated");
+    deactivatedRow.children[5].innerHTML = "Deactivate";
+    deactivatedRow.children[5].className = "staff-deactivate";
+    deactivatedRow.children[5].onclick = function(ev) {
+      staffDeactivate(ev.target);
+    };
+    deactivatedRow.classList.remove("staff-reactivating");
+    sortTable('staff-table', 5, 'asc', 'str');
+  } else {
+    window.alert("Failed to reactivate Staff user!\n"+xhttp.responseText);
+    deactivatedRow.classList.remove("staff-reactivating");
+  }
+}
+
+function staffEdit(elmnt) {
+  let staffUser = elmnt.parentElement.children[0].innerHTML;
+  let staffEmail = elmnt.parentElement.children[1].innerHTML;
+  let staffAdmin = elmnt.parentElement.children[3].children[0].checked;
+  let staffUserID = elmnt.parentElement.children[6].innerHTML;
+  document.getElementById("staff-edit-heading").innerHTML = "Edit Staff User"
+  document.getElementById("userid").value = staffUserID;
+  document.getElementById("username").value = staffUser;
+  document.getElementById("email").value = staffEmail;
+  document.getElementById("password").value = '';
+  document.getElementById("confirm-password").value = '';
+  document.getElementById("is_admin").checked = staffAdmin;
+  document.getElementById("staff-edit-button").innerText = 'Update Staff User';
+  document.getElementById("staff-edit-button").onclick = updateStaff;
+  let oldEditedRows = document.getElementsByClassName("staff-editing");
+  if (oldEditedRows.length>0) {
+    let i;
+    for (i=0; i<oldEditedRows.length; i++) {
+      oldEditedRows[i].classList.remove("staff-editing");
+    };
+  };
+  elmnt.parentElement.classList.add("staff-editing");
+}
+
+function newUser() {
+  document.getElementById("staff-edit-heading").innerHTML = "Create New Staff User";
+  document.getElementById("userid").value = '';
+  document.getElementById("username").value = '';
+  document.getElementById("email").value = '';
+  document.getElementById("username").disabled = false;
+  document.getElementById("password").value = '';
+  document.getElementById("confirm-password").value = '';
+  document.getElementById("is_admin").checked = false;
+  document.getElementById("staff-edit-button").innerText = 'Create Staff User';
+  document.getElementById("staff-edit-button").onclick = createStaff;
+  let oldEditedRows = document.getElementsByClassName("staff-editing");
+  if (oldEditedRows.length>0) {
+    let i;
+    for (i=0; i<oldEditedRows.length; i++) {
+      oldEditedRows[i].classList.remove("staff-editing");
+    };
+  };
+}
+
+function updateStaff() {
+  const userid = document.getElementById("userid").value;
+  const username = document.getElementById("username").value;
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const password_confirm = document.getElementById("confirm-password").value;
+  const is_admin = document.getElementById("is_admin").checked;
+
+  if (username == sessionUser) {
+    if (! is_admin) {
+      flashMessage("You cannot change Admin status of yourself!");
+      return;
+    }
+  };
+
+  if (email == '') {
+    flashMessage("E-mail address required!");
+    return;
+  };
+
+  if (userid == '') {
+    flashMessage("Internal error: User ID must be defined!");
+    return;
+  }
+
+  let queryString = "?id="+userid+"&username="+username+"&email="+email+"&is_admin="+(is_admin?"true":"false");
+
+  if (password != '') {
+    if (password != password_confirm) {
+      flashMessage("Password and Confirm password must be the same!");
+      return;
+    };
+    queryString += +"&password="+password;
+  };
+
+  httpQuery("{{ url_for('admin.staff') }}"+queryString, 'PUT', updateStaffParseResponse);
+}
+
+function updateStaffParseResponse(xhttp) {
+  if (xhttp.status == 200) {
+    const editedRow = document.getElementsByClassName("staff-editing")[0];
+    editedRow.classList.remove("staff-editing");
+    editedRow.children[0].innerHTML = document.getElementById("username").value;
+    editedRow.children[1].innerHTML = document.getElementById("email").value;
+    editedRow.children[3].children[0].checked = document.getElementById("is_admin").checked;
+    newUser();
+  } else {
+    window.alert("Failed to update Staff user!\n"+xhttp.responseText);
+  };
+}
+
+function createStaff() {
+  const username = document.getElementById("username").value;
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const password_confirm = document.getElementById("confirm-password").value;
+  const is_admin = document.getElementById("is_admin").checked;
+
+  if (username == '') {
+    flashMessage("Empty username not allowed!");
+    return;
+  };
+
+  if (email == '') {
+    flashMessage("E-mail address required!");
+    return;
+  };
+
+  if (password == '') {
+    flashMessage("Empty password not allowed!");
+    return;
+  };
+
+  if (password != password_confirm) {
+    flashMessage("Password and Confirm password must be the same!");
+    return;
+  };
+
+  if (userid == '') {
+    flashMessage("Internal error: User ID must be defined!");
+    return;
+  }
+
+  let queryString = "?username="+username+"&email="+email+"&password="+password+"&is_admin="+(is_admin?"true":"false");
+  httpQuery("{{ url_for('admin.staff') }}"+queryString, 'POST', createStaffParseResponse);
+}
+
+function createStaffParseResponse(xhttp) {
+  if (xhttp.status == 200) {
+    const userid = xhttp.responseText;
+    const username = document.getElementById("username").value;
+    const email = document.getElementById("email").value;
+    const is_admin = document.getElementById("is_admin").checked?'1':'0';
+    addStaffTableRow(userid, username, email, false, is_admin, true);
+    newUser();
+  } else {
+    window.alert("Failed to update Staff user!\n"+xhttp.responseText);
+  };
+}
+
+function adminStatusChange(elmnt) {
+  const currentRow = elmnt.parentElement.parentElement;
+  const staffUser = currentRow.children[0].innerHTML;
+  const staffUserID = currentRow.children[6].innerHTML;
+  const adminStatus = elmnt.checked;
+
+  if (staffUser == sessionUser) {
+    elmnt.checked = ! adminStatus;
+    flashMessage("You cannot change Admin status of yourself!");
+    return;
+  };
+
+  if (currentRow.children[0].classList.contains("staff-deactivated")) {
+    elmnt.checked = ! adminStatus
+    return;
+  }
+
+  if (window.confirm("Confirm Admin status change!")) {
+    let oldEditedRows = document.getElementsByClassName("staff-editing");
+    if (oldEditedRows.length>0) {
+      let i;
+      for (i=0; i<oldEditedRows.length; i++) {
+        oldEditedRows[i].classList.remove("staff-editing");
+      };
+    };
+    elmnt.parentElement.parentElement.classList.add("staff-editing");
+    const queryString = "?id="+staffUserID+"&is_admin="+(adminStatus?"true":"false");
+    httpQuery("{{ url_for('admin.staff') }}"+queryString, 'PUT', adminStatusParseResponse);
+  } else {
+    elmnt.checked = ! adminStatus
+  }
+}
+
+function adminStatusParseResponse(xhttp) {
+  if (xhttp.status == 200) {
+    newUser();
+  } else {
+    window.alert("Failed to update Staff user!\n"+xhttp.responseText);
+  };
+}
+
+function unlockAccount(elmnt) {
+  const currentRow = elmnt.parentElement.parentElement;
+  const staffUser = currentRow.children[0].innerHTML;
+  const staffUserID = currentRow.children[6].innerHTML;
+
+  // If element has just got unchecked, then it has been checked -> account is locked
+  if (!elmnt.checked) {
+    if (window.confirm("Confirm unlocking of Staff User account")) {
+      const queryString = "?id="+staffUserID+"&unlock=true";
+      httpQuery("{{ url_for('admin.staff') }}"+queryString, 'PUT', unlockAccountParseResponse);
+    } else {
+      elmnt.checked = true;
+    }
+  } else {
+    // element has just got checked, so it has been unchecked - > account is unclocked
+    // Locking of account in Staff Admin interface is not implemented
+    elmnt.checked = false;
+  }
+}
+
+function unlockAccountParseResponse(xhttp) {
+  if (xhttp.status == 200) {
+    newUser();
+  } else {
+    window.alert("Failed to unlock Staff user!\n"+xhttp.responseText);
+  };
+}
+
+// Orders pane functions:
+
+function addOrdersTableRow(datetime, cashier, total, customer, points, order_json) {
+  // Create new row in format of 'orders-table'
+  // 'orders-table' Columns: datetime [0], cashier [1], total [2], customer [3], points [4], details button [5], order_json (hidden) [6]
+    let row = document.createElement("tr");
+  // Create "td" for 'datetime'
+    let td = document.createElement("td");
+    let txt = document.createTextNode(datetime);
+    td.appendChild(txt);
+    row.appendChild(td);
+  // Create "td" for 'cashier'
+    td = document.createElement("td");
+    txt = document.createTextNode(cashier);
+    td.appendChild(txt);
+    td.classList.add("centered");
+    row.appendChild(td);
+  // Create "td" for 'total'
+    td = document.createElement("td");
+    txt = document.createTextNode(total.toFixed(2));
+    td.appendChild(txt);
+    td.classList.add("aligned-right");
+    row.appendChild(td);
+  // Create "td" for 'customer'
+    td = document.createElement("td");
+    txt = document.createTextNode(customer);
+    td.appendChild(txt);
+    td.classList.add("centered");
+    row.appendChild(td);
+  // Create "td" for 'points'
+    td = document.createElement("td");
+    txt = document.createTextNode(points);
+    td.appendChild(txt);
+    td.classList.add("aligned-right");
+    row.appendChild(td);
+  // Create "td" for details button
+    td = document.createElement("td");
+    txt = document.createTextNode("Items");
+    td.appendChild(txt);
+    td.className = "orders-details-button";
+    td.onclick = function(ev) {
+      ordersDetails(ev.target);
+    };
+    row.appendChild(td);
+  // Create hidden "td" for 'order_json'
+    td = document.createElement("td");
+    txt = document.createTextNode(order_json);
+    td.appendChild(txt);
+    td.style.display = "none";
+    row.appendChild(td);
+    document.getElementById("orders-table").appendChild(row);
+}
+
+function pad(n) {
+    return n<10 ? '0'+n : n;
+}
+
+function ordersQuery() {
+  let query_string;
+  if (document.getElementById("orders-dates-any").checked) {
+    queryString = "";
+  } else if (document.getElementById("orders-dates-today").checked) {
+    const today = new Date();
+    let tomorrow = new Date(today.getTime() + 86400000);
+    queryString = "?date_le="+tomorrow.getFullYear()+"-"+pad(tomorrow.getMonth()+1)+"-"+pad(tomorrow.getDate())+"&date_ge="+today.getFullYear()+"-"+pad(today.getMonth()+1)+"-"+pad(today.getDate());
+  } else if (document.getElementById("orders-dates-yesterday").checked) {
+    const today = new Date();
+    let yesterday = new Date(today.getTime() - 86400000);
+    queryString = "?date_ge="+yesterday.getFullYear()+"-"+pad(yesterday.getMonth()+1)+"-"+pad(yesterday.getDate())+"&date_le="+today.getFullYear()+"-"+pad(today.getMonth()+1)+"-"+pad(today.getDate());
+  } else if (document.getElementById("orders-dates-range").checked) {
+    let date_before = document.getElementById("orders-dates-before").value;
+    let date_after = document.getElementById("orders-dates-after").value;
+    if (date_before != "") {
+      queryString = "?date_le="+date_before+" 00:00:00";
+      if (date_after != "") {
+        queryString += "&date_ge="+date_after+" 23:59:59.99999";
+      };
+    } else {
+      if (date_after != "") {
+        queryString = "?date_ge="+date_after+" 23:59:59.99999";
+      } else {
+        window.alert("Please enter at least one of dates: Before and/or After");
+        return;
+      };
+    };
+  };
+  if (document.getElementById("orders-cashiers-specific").checked) {
+    let cashierLogin = document.getElementById("orders-cashier-login").value;
+    if (staffPaneLazyFetch) {
+      // Staff Table is not fetched - query with cashier login name
+      if (queryString == "") {
+        queryString = "?cashier="+cashierLogin;
+      } else {
+        queryString += "&cashier="+cashierLogin;
+      };
+    } else {
+      // Staff Table is already fetched - query with cashier id found in 'staff-table'
+      let staffTable = document.getElementById("staff-table");
+      // 'staff-table' Columns: username [0], is_admin [1], edit button [2], remove button [3], id (hidden) [4]
+      let i;
+      let cashierId = '0';
+      for (i=1; i<staffTable.rows.length; i++) {
+        if (staffTable.rows[i].children[0].innerHTML == cashierLogin) {
+          cashierId = staffTable.rows[i].children[4].innerHTML;
+          break;
+        };
+      };
+      if (cashierId == '0') {
+        window.alert("No Staff user with login name "+cashierLogin);
+        return;
+      };
+      if (queryString == "") {
+        queryString = "?cashier_id="+cashierId;
+      } else {
+        queryString += "&cashier_id="+cashierId;
+      };
+    };
+  };
+  if (document.getElementById("orders-customers-specific").checked) {
+    let customerNick = document.getElementById("orders-customer-nick").value;
+    if (queryString == "") {
+      queryString = "?customer="+customerNick;
+    } else {
+      queryString += "&customer="+customerNick;
+    };
+  };
+  if (document.getElementById("orders-points-with").checked) {
+    if (queryString == "") {
+      queryString = "?points_ge=1";
+    } else {
+      queryString += "&points_ge=1";
+    };
+  } else if (document.getElementById("orders-points-without").checked) {
+    if (queryString == "") {
+      queryString = "?points_le=0";
+    } else {
+      queryString += "&points_le=0";
+    };
+  }
+  httpQuery("{{ url_for('admin.orders') }}"+queryString, 'GET', ordersQueryParseResponse);
+}
+
+function ordersQueryParseResponse(xhttp) {
+  if (xhttp.status == 200) {
+    let table = document.getElementById("orders-table");
+    let sumTotal = 0.0;
+    let sumPoints = 0;
+    let i;
+    for (i=table.rows.length-1; i>0; i--) {
+      table.deleteRow(i);
+    };
+    let ordersListJSON = xhttp.responseText;
+    let ordersList = JSON.parse(ordersListJSON); // All Orders List fields are strings!
+    for (i=0; i<ordersList.length; i++) {
+      addOrdersTableRow(ordersList[i].order_date.split('.')[0], ordersList[i].cashier, ordersList[i].total, ordersList[i].customer, ordersList[i].points, ordersList[i].order_json);
+      sumTotal += ordersList[i].total;
+      sumPoints += ordersList[i].points;
+    };
+    sortTable('orders-table', 0, 'desc', 'str');
+    document.getElementById("orders-sum").innerHTML = "Sum of orders Total: "+sumTotal.toString()+", Star Points accumulated: "+sumPoints.toString();
+  } else {
+    window.alert("Query failed!\n"+xhttp.responseText);
+  }
+}
+
+function addDetailsTableRow(item, qty, price) {
+  // Create new row in format of 'details-table'
+  // 'details-table' Columns: item [0], qty [1], price [2]
+    let row = document.createElement("tr");
+  // Create "td" for 'item'
+    let td = document.createElement("td");
+    let txt = document.createTextNode(item);
+    td.appendChild(txt);
+    td.classList.add("aligned-left");
+    row.appendChild(td);
+  // Create "td" for 'qty'
+    td = document.createElement("td");
+    txt = document.createTextNode(price);
+    td.appendChild(txt);
+    td.classList.add("centered");
+    row.appendChild(td);
+  // Create "td" for 'price'
+    td = document.createElement("td");
+    txt = document.createTextNode(qty);
+    td.appendChild(txt);
+    td.classList.add("aligned-right");
+    row.appendChild(td);
+    document.getElementById("details-table").appendChild(row);
+}
+
+function ordersDetails(elmnt) {
+  let table = document.getElementById("details-table");
+  let i;
+  for (i=table.rows.length-1; i>0; i--) {
+    table.deleteRow(i);
+  };
+  let ordersList = JSON.parse(elmnt.parentElement.children[6].innerHTML); // All Orders List fields are strings!
+  for (i=0; i<ordersList.length; i++) {
+    addDetailsTableRow(ordersList[i].item, ordersList[i].qty, ordersList[i].price);
+  };
+  document.getElementById('order-details').style.display='block';
+}
+
+function addSPCTableRow(id, nick, name, email, points, cumulative) {
+  // Create new row in format of 'spcustomers-table'
+  // 'spcustomers-table' Columns: nick [0], name [1], points [2], cumulative[3], edit [4], id (hidden) [5], email (hidden) [6]
+    let row = document.createElement("tr");
+  // Create "td" for 'nick'
+    let td = document.createElement("td");
+    let txt = document.createTextNode(nick);
+    td.appendChild(txt);
+    td.classList.add("centered");
+    row.appendChild(td);
+  // Create "td" for 'name'
+    td = document.createElement("td");
+    txt = document.createTextNode(name);
+    td.appendChild(txt);
+    td.classList.add("centered");
+    row.appendChild(td);
+  // Create "td" for 'points'
+    td = document.createElement("td");
+    txt = document.createTextNode(points);
+    td.appendChild(txt);
+    td.classList.add("aligned-right");
+    row.appendChild(td);
+  // Create "td" for 'cumulative'
+    td = document.createElement("td");
+    txt = document.createTextNode(cumulative);
+    td.appendChild(txt);
+    td.classList.add("aligned-right");
+    row.appendChild(td);
+  // Create "td" for 'edit'
+    td = document.createElement("td");
+    txt = document.createTextNode("Edit");
+    td.appendChild(txt);
+    td.className = "spcustomer-details-button";
+    td.onclick = function(ev) {
+      spcustomerEdit(ev.target);
+    };
+  row.appendChild(td);
+  // Create "td" for 'id'
+    td = document.createElement("td");
+    txt = document.createTextNode(id);
+    td.appendChild(txt);
+    td.style.display = "none";
+    row.appendChild(td);
+  // Create "td" for 'email'
+    td = document.createElement("td");
+    txt = document.createTextNode(email);
+    td.appendChild(txt);
+    td.style.display = "none";
+    row.appendChild(td);
+    document.getElementById("spcustomers-table").appendChild(row);
+}
+
+function fetchSPCustomerList() {
+  httpQuery("{{ url_for('admin.spcustomers') }}", 'GET', fetchSPCustomerListParseResponse);
+}
+
+function fetchSPCustomerListParseResponse(xhttp) {
+  if (xhttp.status == 200) {
+    let sumPoints = 0;
+    let spcListJSON = xhttp.responseText;
+    let spcList = JSON.parse(spcListJSON); // All Star Points Customers} List fields are strings!
+    for (i=0; i<spcList.length; i++) {
+      addSPCTableRow(spcList[i].id, spcList[i].nick, spcList[i].name, spcList[i].email, spcList[i].points, spcList[i].cumulative);
+      sumPoints += parseInt(spcList[i].points);
+    };
+    sortTable('spcustomers-table', 3, 'desc', 'int');
+    document.getElementById("starpoints-customers-total").innerHTML = "Sum of outstanding points: "+sumPoints.toString();
+  } else {
+    window.alert("Failed to fetch Staff list!\n"+xhttp.responseText);
+  };
+}
+
+function spcustomerEdit(elmnt) {
+  let oldEditedRows = document.getElementsByClassName("spcustomer-editing");
+  if (oldEditedRows.length>0) {
+    let i;
+    for (i=0; i<oldEditedRows.length; i++) {
+      oldEditedRows[i].classList.remove("spcustomer-editing");
+    };
+  };
+  elmnt.parentElement.classList.add("spcustomer-editing");
+  // 'spcustomers-table' Columns: nick [0], name [1], points [2], cumulative[3], edit [4], id (hidden) [5], email (hidden) [6]
+  document.getElementById("spcustomernick").value = elmnt.parentElement.children[0].innerHTML;
+  document.getElementById("spcustomername").value = elmnt.parentElement.children[1].innerHTML;
+  document.getElementById("spcustomerpoints").value = elmnt.parentElement.children[2].innerHTML;
+  document.getElementById("spcustomerid").value = elmnt.parentElement.children[5].innerHTML;
+  document.getElementById("spcustomeremail").value = elmnt.parentElement.children[6].innerHTML;
+  document.getElementById("spcustomerform").style.display = "block";
+}
+
+function spordersQuery() {
+  let query_string;
+  if (document.getElementById("sporders-dates-any").checked) {
+    queryString = "";
+  } else if (document.getElementById("sporders-dates-today").checked) {
+    const today = new Date();
+    let tomorrow = new Date(today.getTime() + 86400000);
+    queryString = "?date_le="+tomorrow.getFullYear()+"-"+pad(tomorrow.getMonth()+1)+"-"+pad(tomorrow.getDate())+"&date_ge="+today.getFullYear()+"-"+pad(today.getMonth()+1)+"-"+pad(today.getDate());
+  } else if (document.getElementById("sporders-dates-yesterday").checked) {
+    const today = new Date();
+    let yesterday = new Date(today.getTime() - 86400000);
+    queryString = "?date_ge="+yesterday.getFullYear()+"-"+pad(yesterday.getMonth()+1)+"-"+pad(yesterday.getDate())+"&date_le="+today.getFullYear()+"-"+pad(today.getMonth()+1)+"-"+pad(today.getDate());
+  } else if (document.getElementById("sporders-dates-range").checked) {
+    let date_before = document.getElementById("sporders-dates-before").value;
+    let date_after = document.getElementById("sporders-dates-after").value;
+    if (date_before != "") {
+      queryString = "?date_le="+date_before+" 00:00:00";
+      if (date_after != "") {
+        queryString += "&date_ge="+date_after+" 23:59:59.99999";
+      };
+    } else {
+      if (date_after != "") {
+        queryString = "?date_ge="+date_after+" 23:59:59.99999";
+      } else {
+        window.alert("Please enter at least one of dates: Before and/or After");
+        return;
+      };
+    };
+  };
+  if (document.getElementById("sporders-cashiers-specific").checked) {
+    let cashierLogin = document.getElementById("sporders-cashier-login").value;
+    if (staffPaneLazyFetch) {
+      // Staff Table is not fetched - query with cashier login name
+      if (queryString == "") {
+        queryString = "?cashier="+cashierLogin;
+      } else {
+        queryString += "&cashier="+cashierLogin;
+      };
+    } else {
+      // Staff Table is already fetched - query with cashier id found in 'staff-table'
+      let staffTable = document.getElementById("staff-table");
+      // 'staff-table' Columns: username [0], is_admin [1], edit button [2], remove button [3], id (hidden) [4]
+      let i;
+      let cashierId = '0';
+      for (i=1; i<staffTable.rows.length; i++) {
+        if (staffTable.rows[i].children[0].innerHTML == cashierLogin) {
+          cashierId = staffTable.rows[i].children[4].innerHTML;
+          break;
+        };
+      };
+      if (cashierId == '0') {
+        window.alert("No Staff user with login name "+cashierLogin);
+        return;
+      };
+      if (queryString == "") {
+        queryString = "?cashier_id="+cashierId;
+      } else {
+        queryString += "&cashier_id="+cashierId;
+      };
+    };
+  };
+  if (document.getElementById("sporders-customers-specific").checked) {
+    let customerNick = document.getElementById("sporders-customer-nick").value;
+    if (queryString == "") {
+      queryString = "?customer="+customerNick;
+    } else {
+      queryString += "&customer="+customerNick;
+    };
+  };
+
+  httpQuery("{{ url_for('admin.sporders') }}"+queryString, 'GET', spOrdersQueryParseResponse);
+}
+
+function spOrdersQueryParseResponse(xhttp) {
+  if (xhttp.status == 200) {
+    let table = document.getElementById("sporders-table");
+    let sumPoints = 0;
+    let i;
+    for (i=table.rows.length-1; i>0; i--) {
+      table.deleteRow(i);
+    };
+    let ordersListJSON = xhttp.responseText;
+    let ordersList = JSON.parse(ordersListJSON); // All SP Orders List fields are strings!
+    for (i=0; i<ordersList.length; i++) {
+      addSPOrdersTableRow(ordersList[i].created.split('.')[0], ordersList[i].customer, ordersList[i].points, ordersList[i].cashier, ordersList[i].order_json);
+      sumPoints += parseInt(ordersList[i].points);
+    };
+    sortTable('sporders-table', 0, 'desc', 'str');
+    document.getElementById("starpoints-orders-total").innerHTML = "Sum of used points: "+sumPoints.toString();
+  } else {
+    flashMessage("Star Points Orders query error!\n"+xhttp.responseText);
+  }
+}
+
+function spcustomerUpdate() {
+  const id = document.getElementById("spcustomerid").value;
+  const name = document.getElementById("spcustomername").value;
+  const nick = document.getElementById("spcustomernick").value;
+  const email = document.getElementById("spcustomeremail").value;
+  const points = document.getElementById("spcustomerpoints").value;
+
+  let queryString = "?id="+id+"&nick="+nick+"&name="+name+"&email="+email+"&points="+points.toString();
+  httpQuery("{{ url_for('admin.spcustomers') }}"+queryString, 'PUT', spcustomerUpdateParseResponse);
+}
+
+function spcustomerUpdateParseResponse(xhttp) {
+  if (xhttp.status == 200) {
+    const editedRow = document.getElementsByClassName("spcustomer-editing")[0];
+    editedRow.classList.remove("spcustomer-editing");
+    editedRow.children[0].innerHTML = document.getElementById("spcustomernick").value;
+    editedRow.children[1].innerHTML = document.getElementById("spcustomername").value;
+    editedRow.children[2].innerHTML = document.getElementById("spcustomerpoints").value;
+  } else {
+    window.alert("Failed to update Star Points Customer!\n"+xhttp.responseText);
+  };
+  document.getElementById('spcustomerform').style.display='none';
+}
+
+function spcustomerEditCancel() {
+  let oldEditedRows = document.getElementsByClassName("spcustomer-editing");
+  if (oldEditedRows.length>0) {
+    let i;
+    for (i=0; i<oldEditedRows.length; i++) {
+      oldEditedRows[i].classList.remove("spcustomer-editing");
+    };
+  };
+  document.getElementById('spcustomerform').style.display='none';
+}
+
+function addSPOrdersTableRow(datetime, customer, points, cashier, order_json) {
+  // Create new row in format of 'sporders-table'
+  // 'orders-table' Columns: datetime [0], customer [1], points [2], cashier [3], details button [4], order_json (hidden) [5]
+    let row = document.createElement("tr");
+  // Create "td" for 'datetime'
+    let td = document.createElement("td");
+    let txt = document.createTextNode(datetime);
+    td.appendChild(txt);
+    row.appendChild(td);
+  // Create "td" for 'customer'
+    td = document.createElement("td");
+    txt = document.createTextNode(customer);
+    td.appendChild(txt);
+    td.classList.add("centered");
+    row.appendChild(td);
+  // Create "td" for 'points'
+    td = document.createElement("td");
+    txt = document.createTextNode(points.toFixed(2));
+    td.appendChild(txt);
+    td.classList.add("aligned-right");
+    row.appendChild(td);
+  // Create "td" for 'cashier'
+    td = document.createElement("td");
+    txt = document.createTextNode(cashier);
+    td.appendChild(txt);
+    td.classList.add("centered");
+    row.appendChild(td);
+  // Create "td" for details button
+    td = document.createElement("td");
+    txt = document.createTextNode("Items");
+    td.appendChild(txt);
+    td.className = "sporders-details-button";
+    td.onclick = function(ev) {
+      spOrdersDetails(ev.target);
+    };
+    row.appendChild(td);
+  // Create hidden "td" for 'order_json'
+    td = document.createElement("td");
+    txt = document.createTextNode(order_json);
+    td.appendChild(txt);
+    td.style.display = "none";
+    row.appendChild(td);
+    document.getElementById("sporders-table").appendChild(row);
+}
+
+function addSPDetailsTableRow(item, qty) {
+  // Create new row in format of 'spdetails-table'
+  // 'spdetails-table' Columns: item [0], qty [1]
+    let row = document.createElement("tr");
+  // Create "td" for 'item'
+    let td = document.createElement("td");
+    let txt = document.createTextNode(item);
+    td.appendChild(txt);
+    td.classList.add("aligned-left");
+    row.appendChild(td);
+  // Create "td" for 'qty'
+    td = document.createElement("td");
+    txt = document.createTextNode(qty);
+    td.appendChild(txt);
+    td.classList.add("aligned-right");
+    row.appendChild(td);
+    document.getElementById("spdetails-table").appendChild(row);
+}
+
+function spOrdersDetails(elmnt) {
+  let table = document.getElementById("spdetails-table");
+  let i;
+  for (i=table.rows.length-1; i>0; i--) {
+    table.deleteRow(i);
+  };
+  let ordersList = JSON.parse(elmnt.parentElement.children[5].innerHTML); // All Orders List fields are strings!
+  console.log(elmnt.parentElement.children[5].innerHTML);
+  for (i=0; i<ordersList.length; i++) {
+    addSPDetailsTableRow(ordersList[i].item, ordersList[i].qty);
+  };
+  document.getElementById('sporder-details').style.display='block';
+}
+
+</script>
+</body>
